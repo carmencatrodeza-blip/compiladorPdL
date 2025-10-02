@@ -3,13 +3,11 @@ public class Token {
 	private String codigo;
 	private String atributo;
 	private int linea;
-	private int columna;
 
-	public Token(String codigo, String atributo, int linea, int columna) {
+	public Token(String codigo, String atributo, int linea) {
 		this.codigo = codigo;
 		this.atributo = atributo;
 		this.linea = linea;
-		this.columna = columna;
 	}
 	
 	public String getCodigo() {
@@ -22,10 +20,6 @@ public class Token {
 	
 	public int getLinea() {
 		return linea;
-	}
-	
-	public int getColumna() {
-		return columna;
 	}
 	
 	public String toFormatoTS() {
