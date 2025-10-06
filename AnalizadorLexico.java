@@ -52,18 +52,22 @@ public class AnalizadorLexico {
 	private int numero; // Variable para calcular números.
 	private int dec; // Variable para la parte decimal de números reales.
 	private int caracter; // Caracter guardado como byte.
+	private CaracterEspecial ce; // Caracter especial actual.
 	private FileReader fr; // Lector de archivos.
+	private GestorErrores gestor = new GestorErrores();
 
-	public AnalizadorLexico() {
+	public AnalizadorLexico(String nombreFichero) {
 		linea = 1;
 		try{
-			fr = new FileReader("entrada.txt");
+			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
+			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (FileNotFoundException fnf){
 			System.err.println("Archivo de entrada no encontrado.");
 		} catch (IOException ioe){
 			System.err.println("Error al abrir el archivo de entrada.");
 		}
+		gestor = new GestorErrores();
 	}
 
 	public SimpleEntry<String, Object> sigToken() {
@@ -73,7 +77,6 @@ public class AnalizadorLexico {
 		while (true){
 			switch(estado){
 			case 0: // Estado inicial
-				CaracterEspecial ce = CaracterEspecial.fromAscii(caracter);
 				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB){
 					leerCaracter();
 				}
@@ -106,7 +109,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.BARRA_INV){
-					mostrarError(104, linea, (char)caracter);
+					gestor.mostrarError(104, linea, (char)caracter);
 					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
 				}
 				else if(ce == CaracterEspecial.IGUAL){
@@ -118,43 +121,42 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.PAR_IZQ){
-					estado = 22;
 					leerCaracter();
+					return new SimpleEntry<>("5", null);
 				}
 				else if(ce == CaracterEspecial.PAR_DER){
-					estado = 23;
 					leerCaracter();
+					return new SimpleEntry<>("6", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_IZQ){
-					estado = 24;
 					leerCaracter();
+					return new SimpleEntry<>("7", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_DER){
-					estado = 25;
 					leerCaracter();
+					return new SimpleEntry<>("8", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO_Y_COMA){
-					estado = 26;
 					leerCaracter();
+					return new SimpleEntry<>("4", null);
 				}
 				else if(ce == CaracterEspecial.COMA){
-					estado = 27;
 					leerCaracter();
+					return new SimpleEntry<>("3", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO){
-					mostrarError(102, linea, (char)caracter);
+					gestor.mostrarError(102, linea, (char)caracter);
 					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
 				}
 				else if(caracter == -1){
 					estado = 99; // Estado de fin de archivo.
 				}
 				else{
-					mostrarError(101, linea, (char)caracter);
+					gestor.mostrarError(101, linea, (char)caracter);
 					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
 				}
 				break;
 			case 1:
-				ce = CaracterEspecial.fromAscii(caracter);
 				if(esLetra(caracter)){
 					lexema += (char)caracter;
 					leerCaracter();
@@ -178,7 +180,6 @@ public class AnalizadorLexico {
 				}
 				break;
 			case 2:
-				ce = CaracterEspecial.fromAscii(caracter);
 				if(esLetra(caracter) || esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
 					lexema += (char)caracter;
 					leerCaracter();
@@ -192,7 +193,6 @@ public class AnalizadorLexico {
 				}
 				break;
 			case 3:
-				ce = CaracterEspecial.fromAscii(caracter);
 				if(esDigito(caracter)){
 					construirNumero(caracter);
 					leerCaracter();
@@ -206,18 +206,16 @@ public class AnalizadorLexico {
 				}
 				break;
 			case 4:
-				ce = CaracterEspecial.fromAscii(caracter);
 				if(esDigito(caracter)){
 					estado = 5;
 					construirNumero(caracter);
 					leerCaracter();
 				}
 				else{
-					mostrarError(103, linea, (char)caracter);
+					gestor.mostrarError(103, linea, (char)caracter);
 				}
 				break;
 			case 5:
-				ce = CaracterEspecial.fromAscii(caracter);
 				if(esDigito(caracter)){
 					construirNumero(caracter);
 					leerCaracter();
@@ -227,12 +225,17 @@ public class AnalizadorLexico {
 				}
 				break;
 			case 6:
-				if (caracter == '"') {
+				if (ce == CaracterEspecial.COMILLAS) {
 					leerCaracter();
-					return new SimpleEntry<>("cadena", lexema);
+					int pos = buscarTS(lexema);
+					if(pos == -1){
+						pos = insertarTS(lexema, "string");
+					}
+					return new SimpleEntry<>("cadena", pos);
 				}
-				else if (caracter == '\\') { //no se si me he equivocado
+				else if (ce == CaracterEspecial.BARRA_INV) {
 					estado = 7;
+					lexema += (char)caracter;
 					leerCaracter();
 				}
 				else {
@@ -241,25 +244,26 @@ public class AnalizadorLexico {
 				}
 				break;
 			case 7:
-				lexema += (char)caracter;
+				// De momento se asume que el carácter siguiente es válido (n, t, ", \, etc.)
 				estado = 6;
+				lexema += (char)caracter;
 				leerCaracter();
 				break;
 			case 8:
-				if (caracter == '/') {
+				if (ce == CaracterEspecial.BARRA) {
 					estado = 9;
 					leerCaracter();
 				}
-				else if (caracter == '=') {
+				else if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
-					return new SimpleEntry<>("/=", null);
+					return new SimpleEntry<>("1", null);
 				}
 				else {
-					return new SimpleEntry<>("/", null);
+					return new SimpleEntry<>("9", null);
 				}
 				break;
 			case 9:
-				if (caracter == '\n') {
+				if (ce == CaracterEspecial.SALTO_LINEA) {
 					linea++;
 					estado = 0;
 					leerCaracter();
@@ -271,58 +275,24 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				break;
-			case 10: //si pongo break de error
-				if (caracter == '=') {
+			case 10:
+				if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
-					return new SimpleEntry<>("==", null);
+					return new SimpleEntry<>("11", null);
 				}
 				else {
-					return new SimpleEntry<>("=", null);
+					return new SimpleEntry<>("2", null);
 				}
 			case 11:
-				if(caracter == '&') {
+				if(ce == CaracterEspecial.Y) {
 					leerCaracter();
-					return new SimpleEntry<>("&&", null);
+					return new SimpleEntry<>("10", null);
 				}
 				else {
-					mostrarError(101, linea, '&');  //no hay token & suelto en la tabla
+					gestor.mostrarError(105, linea, (char)caracter);
 					estado = 0;
 				}
 				break;
-			case 12:
-				return new SimpleEntry<>("id", null);
-			case 13:
-				return new SimpleEntry<>("entero", null);
-			case 14:
-				return new SimpleEntry<>("real", null);
-			case 15:
-				return new SimpleEntry<>("cadena", null);
-			case 16:
-				return new SimpleEntry<>("/=", null);
-			case 17:
-				return new SimpleEntry<>("/", null);
-			case 18:
-				return new SimpleEntry<>("==", null);
-			case 19:
-				return new SimpleEntry<>("=", null);
-			case 20:
-				return new SimpleEntry<>("&&", null);
-			case 21:
-				return new SimpleEntry<>(lexema, null);
-			case 22:
-				return new SimpleEntry<>("(", null);
-				case 23:
-					return new SimpleEntry<>(")", null);
-				case 24:
-					return new SimpleEntry<>("{", null);	
-				case 25:
-					return new SimpleEntry<>("}", null);
-				case 26:
-					return new SimpleEntry<>(";", null);
-				case 27:
-					return new SimpleEntry<>(",", null);
-				case 99:
-					return new SimpleEntry<>("EOF", null);
 			}
 		}
 	}
@@ -330,6 +300,7 @@ public class AnalizadorLexico {
 	private void leerCaracter() {
 		try {
 			caracter = fr.read();
+			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 		}
@@ -370,20 +341,4 @@ public class AnalizadorLexico {
 	private int insertarTS(String s, String tipo){
 		return -1;// TODO: Implementar.
 	}
-
-	private void mostrarError(int codigo, int linea, char caracter) {
-		switch (codigo) {
-		case 101:
-			System.err.println("Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.");
-			break;
-		case 102:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera.");
-			break;
-		case 103:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal.");
-			break;
-		case 104:
-			System.err.println("Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.");
-			break;
-		}
-	}
+}
