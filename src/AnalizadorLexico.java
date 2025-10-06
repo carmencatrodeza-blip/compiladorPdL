@@ -1,4 +1,3 @@
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
@@ -6,289 +5,340 @@ import java.util.AbstractMap.SimpleEntry;
 
 // Enum para los caracteres especiales
 enum CaracterEspecial {
-    ESPACIO(' ', 32),
-    TAB('\t', 9),
-    SALTO_LINEA('\n', 10),
-    GUION_BAJO('_', 95),
-    COMILLAS('"', 34),
-    BARRA('/', 47),
-    BARRA_INV('\\', 92),
-    IGUAL('=', 61),
-    Y('&', 38),
-    PAR_IZQ('(', 40),
-    PAR_DER(')', 41),
-    LLAVE_IZQ('{', 123),
-    LLAVE_DER('}', 125),
-    PUNTO_Y_COMA(';', 59),
-    COMA(',', 44),
-    PUNTO('.', 46);
+	ESPACIO(' ', 32),
+	TAB('\t', 9),
+	SALTO_LINEA('\n', 10),
+	GUION_BAJO('_', 95),
+	COMILLAS('"', 34),
+	BARRA('/', 47),
+	BARRA_INV('\\', 92),
+	IGUAL('=', 61),
+	Y('&', 38),
+	PAR_IZQ('(', 40),
+	PAR_DER(')', 41),
+	LLAVE_IZQ('{', 123),
+	LLAVE_DER('}', 125),
+	PUNTO_Y_COMA(';', 59),
+	COMA(',', 44),
+	PUNTO('.', 46);
 
-    public final char caracter;
-    public final int ascii;
-    CaracterEspecial(char caracter, int ascii) {
-        this.caracter = caracter;
-        this.ascii = ascii;
-    }
+	public final char caracter;
+	public final int ascii;
+	CaracterEspecial(char caracter, int ascii) {
+		this.caracter = caracter;
+		this.ascii = ascii;
+	}
 
-    public static CaracterEspecial fromAscii(int ascii) {
-        for (CaracterEspecial ce : values()) {
-            if (ce.ascii == ascii) return ce;
-        }
-        return null;
-    }
+	public static CaracterEspecial fromAscii(int ascii) {
+		for (CaracterEspecial ce : values()) {
+			if (ce.ascii == ascii) return ce;
+		}
+		return null;
+	}
 }
 
 public class AnalizadorLexico {
 
-    // TODO: Añadir tabla de símbolos. 
-    /*
+	// TODO: Añadir tabla de símbolos. 
+	/*
     ¿HashMap: id -> (líneaTS, tipo)?
     ¿LinkedHashMap: id -> tipo?
     Si solo necesitamos lineaTS para el token, HashMap: id -> tipo y variable lineaTS aparte.
-    */
+	 */
 
-    private int linea; // Número de línea del documento.
-    private int estado; // Estado del autómata.
-    private String lexema; // Variable para construir el lexema.
-    private int numero; // Variable para calcular números.
-    private int dec; // Variable para la parte decimal de números reales.
-    private int caracter; // Caracter guardado como byte.
-    private FileReader fr; // Lector de archivos.
+	private int linea; // Número de línea del documento.
+	private int estado; // Estado del autómata.
+	private String lexema; // Variable para construir el lexema.
+	private int numero; // Variable para calcular números.
+	private int dec; // Variable para la parte decimal de números reales.
+	private int caracter; // Caracter guardado como byte.
+	private CaracterEspecial ce; // Caracter especial actual.
+	private FileReader fr; // Lector de archivos.
+	private GestorErrores gestor = new GestorErrores();
 
-    public AnalizadorLexico() {
-        linea = 1;
-        try{
-            fr = new FileReader("entrada.txt");
-            caracter = fr.read();
-        } catch (FileNotFoundException fnf){
-            System.err.println("Archivo de entrada no encontrado.");
-        } catch (IOException ioe){
-            System.err.println("Error al abrir el archivo de entrada.");
-        }
-    }
+	public AnalizadorLexico(String nombreFichero) {
+		linea = 1;
+		try{
+			fr = new FileReader(nombreFichero);
+			caracter = fr.read();
+			ce = CaracterEspecial.fromAscii(caracter);
+		} catch (FileNotFoundException fnf){
+			System.err.println("Archivo de entrada no encontrado.");
+		} catch (IOException ioe){
+			System.err.println("Error al abrir el archivo de entrada.");
+		}
+		gestor = new GestorErrores();
+	}
 
-    public SimpleEntry<String, Object> sigToken() {
-        estado = 0;
-        lexema = "";
-        numero = 0;
-        while (true){
-            switch(estado){
-                case 0: // Estado inicial
-                    CaracterEspecial ce = CaracterEspecial.fromAscii(caracter);
-                    if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB){
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.SALTO_LINEA){
-                        linea++;
-                        leerCaracter();
-                    }
-                    else if(esLetra(caracter)){
-                        lexema += (char)caracter;
-                        estado = 1;
-                        leerCaracter();
-                    }
-                    else if(esDigito(caracter)){
-                        int num = caracter - 48; // Transformar de ASCII a dígito.
-                        numero = numero * 10 + num; // Construir el número.
-                        estado = 3;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.GUION_BAJO){
-                        lexema += (char)caracter;
-                        estado = 2;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.COMILLAS){
-                        estado = 6;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.BARRA){
-                        estado = 8;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.BARRA_INV){
-                        mostrarError(104, linea, (char)caracter);
-                        // ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
-                    }
-                    else if(ce == CaracterEspecial.IGUAL){
-                        estado = 10;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.Y){
-                        estado = 11;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.PAR_IZQ){
-                        estado = 22;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.PAR_DER){
-                        estado = 23;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.LLAVE_IZQ){
-                        estado = 24;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.LLAVE_DER){
-                        estado = 25;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.PUNTO_Y_COMA){
-                        estado = 26;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.COMA){
-                        estado = 27;
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.PUNTO){
-                        mostrarError(102, linea, (char)caracter);
-                        // ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
-                    }
-                    else if(caracter == -1){
-                        estado = 99; // Estado de fin de archivo.
-                    }
-                    else{
-                        mostrarError(101, linea, (char)caracter);
-                        // ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
-                    }
-                    break;
-                case 1:
-                    ce = CaracterEspecial.fromAscii(caracter);
-                    if(esLetra(caracter)){
-                        lexema += (char)caracter;
-                        leerCaracter();
-                    }
-                    else if(esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
-                        lexema += (char)caracter;
-                        estado = 2;
-                        leerCaracter();
-                    }
-                    else{
-                        if(esReservada(lexema) != "noEsReservada"){
-                            return new SimpleEntry<>(lexema, null);
-                        }
-                        else{
-                            int pos = buscarTS(lexema);
-                            if(pos == -1){
-                                pos = insertarTS(lexema, "id");
-                            }
-                            return new SimpleEntry<>("id", pos);
-                        }
-                    }
-                break;
-                case 2:
-                    ce = CaracterEspecial.fromAscii(caracter);
-                    if(esLetra(caracter) || esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
-                        lexema += (char)caracter;
-                        leerCaracter();
-                    }
-                    else{
-                        int pos = buscarTS(lexema);
-                        if(pos == -1){
-                            pos = insertarTS(lexema, "id");
-                        }
-                        return new SimpleEntry<>("id", pos);
-                    }
-                break;
-                case 3:
-                    ce = CaracterEspecial.fromAscii(caracter);
-                    if(esDigito(caracter)){
-                        construirNumero(caracter);
-                        leerCaracter();
-                    }
-                    else if(ce == CaracterEspecial.PUNTO){
-                        estado =  4;
-                        leerCaracter();
-                    }
-                    else{
-                        return new SimpleEntry<>("entero", calcularValor());
-                    }
-                break;
-                case 4:
-                    ce = CaracterEspecial.fromAscii(caracter);
-                    if(esDigito(caracter)){
-                        estado = 5;
-                        construirNumero(caracter);
-                        leerCaracter();
-                    }
-                    else{
-                        mostrarError(103, linea, (char)caracter);
-                    }
-                break;
-                case 5:
-                    ce = CaracterEspecial.fromAscii(caracter);
-                    if(esDigito(caracter)){
-                        construirNumero(caracter);
-                        leerCaracter();
-                    }
-                    else{
-                        return new SimpleEntry<>("real", calcularValor());
-                    }
-                break;
-            }
-        }
-    }
+	public SimpleEntry<String, Object> sigToken() {
+		estado = 0;
+		lexema = "";
+		numero = 0;
+		while (true){
+			switch(estado){
+			case 0: // Estado inicial
+				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB){
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.SALTO_LINEA){
+					linea++;
+					leerCaracter();
+				}
+				else if(esLetra(caracter)){
+					lexema += (char)caracter;
+					estado = 1;
+					leerCaracter();
+				}
+				else if(esDigito(caracter)){
+					int num = caracter - 48; // Transformar de ASCII a dígito.
+					numero = numero * 10 + num; // Construir el número.
+					estado = 3;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.GUION_BAJO){
+					lexema += (char)caracter;
+					estado = 2;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.COMILLAS){
+					estado = 6;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.BARRA){
+					estado = 8;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.BARRA_INV){
+					gestor.mostrarError(104, linea, (char)caracter);
+					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+				}
+				else if(ce == CaracterEspecial.IGUAL){
+					estado = 10;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.Y){
+					estado = 11;
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.PAR_IZQ){
+					leerCaracter();
+					return new SimpleEntry<>("5", null);
+				}
+				else if(ce == CaracterEspecial.PAR_DER){
+					leerCaracter();
+					return new SimpleEntry<>("6", null);
+				}
+				else if(ce == CaracterEspecial.LLAVE_IZQ){
+					leerCaracter();
+					return new SimpleEntry<>("7", null);
+				}
+				else if(ce == CaracterEspecial.LLAVE_DER){
+					leerCaracter();
+					return new SimpleEntry<>("8", null);
+				}
+				else if(ce == CaracterEspecial.PUNTO_Y_COMA){
+					leerCaracter();
+					return new SimpleEntry<>("4", null);
+				}
+				else if(ce == CaracterEspecial.COMA){
+					leerCaracter();
+					return new SimpleEntry<>("3", null);
+				}
+				else if(ce == CaracterEspecial.PUNTO){
+					gestor.mostrarError(102, linea, (char)caracter);
+					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+				}
+				else if(caracter == -1){
+					estado = 99; // Estado de fin de archivo.
+				}
+				else{
+					gestor.mostrarError(101, linea, (char)caracter);
+					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+				}
+				break;
+			case 1:
+				if(esLetra(caracter)){
+					lexema += (char)caracter;
+					leerCaracter();
+				}
+				else if(esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
+					lexema += (char)caracter;
+					estado = 2;
+					leerCaracter();
+				}
+				else{
+					if(esReservada(lexema) != "noEsReservada"){
+						return new SimpleEntry<>(lexema, null);
+					}
+					else{
+						int pos = buscarTS(lexema);
+						if(pos == -1){
+							pos = insertarTS(lexema, "id");
+						}
+						return new SimpleEntry<>("id", pos);
+					}
+				}
+				break;
+			case 2:
+				if(esLetra(caracter) || esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
+					lexema += (char)caracter;
+					leerCaracter();
+				}
+				else{
+					int pos = buscarTS(lexema);
+					if(pos == -1){
+						pos = insertarTS(lexema, "id");
+					}
+					return new SimpleEntry<>("id", pos);
+				}
+				break;
+			case 3:
+				if(esDigito(caracter)){
+					construirNumero(caracter);
+					leerCaracter();
+				}
+				else if(ce == CaracterEspecial.PUNTO){
+					estado =  4;
+					leerCaracter();
+				}
+				else{
+					return new SimpleEntry<>("entero", calcularValor());
+				}
+				break;
+			case 4:
+				if(esDigito(caracter)){
+					estado = 5;
+					construirNumero(caracter);
+					leerCaracter();
+				}
+				else{
+					gestor.mostrarError(103, linea, (char)caracter);
+				}
+				break;
+			case 5:
+				if(esDigito(caracter)){
+					construirNumero(caracter);
+					leerCaracter();
+				}
+				else{
+					return new SimpleEntry<>("real", calcularValor());
+				}
+				break;
+			case 6:
+				if (ce == CaracterEspecial.COMILLAS) {
+					leerCaracter();
+					int pos = buscarTS(lexema);
+					if(pos == -1){
+						pos = insertarTS(lexema, "string");
+					}
+					return new SimpleEntry<>("cadena", pos);
+				}
+				else if (ce == CaracterEspecial.BARRA_INV) {
+					estado = 7;
+					lexema += (char)caracter;
+					leerCaracter();
+				}
+				else {
+					lexema += (char)caracter;
+					leerCaracter();
+				}
+				break;
+			case 7:
+				// De momento se asume que el carácter siguiente es válido (n, t, ", \, etc.)
+				estado = 6;
+				lexema += (char)caracter;
+				leerCaracter();
+				break;
+			case 8:
+				if (ce == CaracterEspecial.BARRA) {
+					estado = 9;
+					leerCaracter();
+				}
+				else if (ce == CaracterEspecial.IGUAL) {
+					leerCaracter();
+					return new SimpleEntry<>("1", null);
+				}
+				else {
+					return new SimpleEntry<>("9", null);
+				}
+				break;
+			case 9:
+				if (ce == CaracterEspecial.SALTO_LINEA) {
+					linea++;
+					estado = 0;
+					leerCaracter();
+				}
+				else if (caracter == -1) {
+					return new SimpleEntry<>("EOF", null);
+				}
+				else {
+					leerCaracter();
+				}
+				break;
+			case 10:
+				if (ce == CaracterEspecial.IGUAL) {
+					leerCaracter();
+					return new SimpleEntry<>("11", null);
+				}
+				else {
+					return new SimpleEntry<>("2", null);
+				}
+			case 11:
+				if(ce == CaracterEspecial.Y) {
+					leerCaracter();
+					return new SimpleEntry<>("10", null);
+				}
+				else {
+					gestor.mostrarError(105, linea, (char)caracter);
+					estado = 0;
+				}
+				break;
+			}
+		}
+	}
 
-    private void leerCaracter() {
-        try {
-            caracter = fr.read();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-    }
+	private void leerCaracter() {
+		try {
+			caracter = fr.read();
+			ce = CaracterEspecial.fromAscii(caracter);
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+	}
 
-    private void construirNumero(int caracter){
-        int num = caracter - 48; // Transformar de ASCII a dígito.
-        numero = numero * 10 + num; // Construir el número.
-        if(estado > 3) dec++;
-    }
+	private void construirNumero(int caracter){
+		int num = caracter - 48; // Transformar de ASCII a dígito.
+		numero = numero * 10 + num; // Construir el número.
+		if(estado > 3) dec++;
+	}
 
-    private int calcularValor(){
-        return numero * (int)Math.pow(10, -dec);
-    }
+	private int calcularValor(){
+		return numero * (int)Math.pow(10, -dec);
+	}
 
-    private boolean esLetra(int c) {
-        return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-    }
+	private boolean esLetra(int c) {
+		return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
+	}
 
-    private boolean esDigito(int c) {
-        return (c >= 48 && c <= 57);
-    }
+	private boolean esDigito(int c) {
+		return (c >= 48 && c <= 57);
+	}
 
-    private String esReservada(String s) {
-        String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
-        for (String r : reservadas) {
-            if (s.equals(r)) return s;
-        }
-        return "noEsReservada";
-    }
+	private String esReservada(String s) {
+		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
+		for (String r : reservadas) {
+			if (s.equals(r)) return s;
+		}
+		return "noEsReservada";
+	}
 
-    // Busca el identificador s en la tabla de símbolos y devuelve su posición (-1 si no está).
-    private int buscarTS(String s){
-        return -1; // TODO: Implementar.
-    }
+	// Busca el identificador s en la tabla de símbolos y devuelve su posición (-1 si no está).
+	private int buscarTS(String s){
+		return -1; // TODO: Implementar.
+	}
 
-    // Inserta el identificador s en la tabla de símbolos con el tipo dado y devuelve su posición.
-    private int insertarTS(String s, String tipo){
-        return -1;// TODO: Implementar.
-    }
-
-    private void mostrarError(int codigo, int linea, char caracter) {
-        switch (codigo) {
-            case 101:
-                System.err.println("Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.");
-                break;
-            case 102:
-                System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera.");
-                break;
-            case 103:
-                System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal.");
-                break;
-            case 104:
-                System.err.println("Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.");
-                break;
-        }
-    }
+	// Inserta el identificador s en la tabla de símbolos con el tipo dado y devuelve su posición.
+	private int insertarTS(String s, String tipo){
+		return -1;// TODO: Implementar.
+	}
 }
