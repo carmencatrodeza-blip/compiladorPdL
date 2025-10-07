@@ -8,6 +8,7 @@ enum CaracterEspecial {
 	ESPACIO(' ', 32),
 	TAB('\t', 9),
 	SALTO_LINEA('\n', 10),
+	RETORNO_CARRO('\r', 13),
 	GUION_BAJO('_', 95),
 	COMILLAS('"', 34),
 	BARRA('/', 47),
@@ -342,3 +343,4 @@ public class AnalizadorLexico {
 		return -1;// TODO: Implementar.
 	}
 }
+
