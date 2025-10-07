@@ -2,7 +2,7 @@
 let string s;
 let int a;
 let boolean bb;
-bb= 9 < 8 + 3;
+bb= 9 == 8 + 3;
 
 function RR int (int n, boolean b)
 {
@@ -15,13 +15,13 @@ function RR int (int n, boolean b)
 
 let string s_s;
 
-/*RR = 1;*/
+//RR = 1;
 
 function prin (string s, int RR)	
 {
 	print(s);
 	let boolean s_s;
-	print('hola');
+	print("hola");
 	print(a + 3);
 	print(RR);	input (s);
 	if (bb)return ;
@@ -45,4 +45,4 @@ return s;
 
 }
 	kk= RR (a, bb);
-/*	kk = prin (kk);*/
+// kk = prin (kk);

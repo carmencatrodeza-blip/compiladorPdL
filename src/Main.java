@@ -2,9 +2,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 
+// Todavía no sé si va correctamente jeje
+
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "./codigoMal.txt"; // dir/ficheroDePrueba.txt
+        String dirPrueba = "./codigoMal.txt";
         AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
         try {
             FileWriter ficheroTokens = new FileWriter("./tokens.txt");

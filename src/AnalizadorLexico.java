@@ -8,6 +8,7 @@ enum CaracterEspecial {
 	ESPACIO(' ', 32),
 	TAB('\t', 9),
 	SALTO_LINEA('\n', 10),
+	RETORNO_CARRO('\r', 13),
 	GUION_BAJO('_', 95),
 	COMILLAS('"', 34),
 	BARRA('/', 47),
@@ -77,7 +78,7 @@ public class AnalizadorLexico {
 		while (true){
 			switch(estado){
 			case 0: // Estado inicial
-				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB){
+				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB || ce == CaracterEspecial.RETORNO_CARRO){
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.SALTO_LINEA){
@@ -90,8 +91,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(esDigito(caracter)){
-					int num = caracter - 48; // Transformar de ASCII a dígito.
-					numero = numero * 10 + num; // Construir el número.
+					construirNumero(caracter);
 					estado = 3;
 					leerCaracter();
 				}
@@ -110,7 +110,7 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.BARRA_INV){
 					gestor.mostrarError(104, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				else if(ce == CaracterEspecial.IGUAL){
 					estado = 10;
@@ -146,14 +146,14 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.PUNTO){
 					gestor.mostrarError(102, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				else if(caracter == -1){
-					estado = 99; // Estado de fin de archivo.
+					return new SimpleEntry<>("EOF", null);
 				}
 				else{
 					gestor.mostrarError(101, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				break;
 			case 1:
@@ -213,6 +213,7 @@ public class AnalizadorLexico {
 				}
 				else{
 					gestor.mostrarError(103, linea, (char)caracter);
+					return null;
 				}
 				break;
 			case 5:
@@ -290,9 +291,8 @@ public class AnalizadorLexico {
 				}
 				else {
 					gestor.mostrarError(105, linea, (char)caracter);
-					estado = 0;
+					return null;
 				}
-				break;
 			}
 		}
 	}
