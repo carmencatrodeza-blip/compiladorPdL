@@ -50,6 +50,7 @@ public class AnalizadorLexico {
 	private int linea; // Número de línea del documento.
 	private int estado; // Estado del autómata.
 	private String lexema; // Variable para construir el lexema.
+	private int contador; // Contador de caracteres leídos.
 	private int numero; // Variable para calcular números.
 	private int dec; // Variable para la parte decimal de números reales.
 	private int caracter; // Caracter guardado como byte.
@@ -78,7 +79,7 @@ public class AnalizadorLexico {
 		while (true){
 			switch(estado){
 			case 0: // Estado inicial
-				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB){
+				if(ce == CaracterEspecial.ESPACIO || ce == CaracterEspecial.TAB || ce == CaracterEspecial.RETORNO_CARRO){
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.SALTO_LINEA){
@@ -91,8 +92,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(esDigito(caracter)){
-					int num = caracter - 48; // Transformar de ASCII a dígito.
-					numero = numero * 10 + num; // Construir el número.
+					construirNumero(caracter);
 					estado = 3;
 					leerCaracter();
 				}
@@ -111,7 +111,7 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.BARRA_INV){
 					gestor.mostrarError(104, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				else if(ce == CaracterEspecial.IGUAL){
 					estado = 10;
@@ -123,38 +123,38 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.PAR_IZQ){
 					leerCaracter();
-					return new SimpleEntry<>("5", null);
+					return new SimpleEntry<>("parIzq", null);
 				}
 				else if(ce == CaracterEspecial.PAR_DER){
 					leerCaracter();
-					return new SimpleEntry<>("6", null);
+					return new SimpleEntry<>("parDer", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_IZQ){
 					leerCaracter();
-					return new SimpleEntry<>("7", null);
+					return new SimpleEntry<>("llaveIzq", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_DER){
 					leerCaracter();
-					return new SimpleEntry<>("8", null);
+					return new SimpleEntry<>("llaveDer", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO_Y_COMA){
 					leerCaracter();
-					return new SimpleEntry<>("4", null);
+					return new SimpleEntry<>("puntoComa", null);
 				}
 				else if(ce == CaracterEspecial.COMA){
 					leerCaracter();
-					return new SimpleEntry<>("3", null);
+					return new SimpleEntry<>("coma", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO){
 					gestor.mostrarError(102, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				else if(caracter == -1){
-					estado = 99; // Estado de fin de archivo.
+					return new SimpleEntry<>("EOF", null);
 				}
 				else{
 					gestor.mostrarError(101, linea, (char)caracter);
-					// ? Al mostrar un error, ¿seguimos con normalidad o paramos el programa?
+					return null;
 				}
 				break;
 			case 1:
@@ -203,7 +203,11 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					return new SimpleEntry<>("entero", calcularValor());
+					if (numero > 32767){
+						gestor.mostrarError(106, linea, (char)caracter);
+						return null;
+					}
+					return new SimpleEntry<>("entero", numero);
 				}
 				break;
 			case 4:
@@ -214,6 +218,7 @@ public class AnalizadorLexico {
 				}
 				else{
 					gestor.mostrarError(103, linea, (char)caracter);
+					return null;
 				}
 				break;
 			case 5:
@@ -222,24 +227,31 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
+					double output = calcularValor();
+					if (output > 117549436.0f){
+						gestor.mostrarError(107, linea, (char)caracter);
+						return null;
+					}
 					return new SimpleEntry<>("real", calcularValor());
 				}
 				break;
 			case 6:
 				if (ce == CaracterEspecial.COMILLAS) {
 					leerCaracter();
-					int pos = buscarTS(lexema);
-					if(pos == -1){
-						pos = insertarTS(lexema, "string");
+					if (contador > 64) {
+						gestor.mostrarError(108, linea, (char)caracter);
+						return null;
 					}
-					return new SimpleEntry<>("cadena", pos);
+					return new SimpleEntry<>("cadena", lexema);
 				}
 				else if (ce == CaracterEspecial.BARRA_INV) {
 					estado = 7;
+					contador++;
 					lexema += (char)caracter;
 					leerCaracter();
 				}
 				else {
+					contador++;
 					lexema += (char)caracter;
 					leerCaracter();
 				}
@@ -257,10 +269,10 @@ public class AnalizadorLexico {
 				}
 				else if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
-					return new SimpleEntry<>("1", null);
+					return new SimpleEntry<>("asigDiv", null);
 				}
 				else {
-					return new SimpleEntry<>("9", null);
+					return new SimpleEntry<>("div", null);
 				}
 				break;
 			case 9:
@@ -279,21 +291,20 @@ public class AnalizadorLexico {
 			case 10:
 				if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
-					return new SimpleEntry<>("11", null);
+					return new SimpleEntry<>("igual", null);
 				}
 				else {
-					return new SimpleEntry<>("2", null);
+					return new SimpleEntry<>("asig", null);
 				}
 			case 11:
 				if(ce == CaracterEspecial.Y) {
 					leerCaracter();
-					return new SimpleEntry<>("10", null);
+					return new SimpleEntry<>("y", null);
 				}
 				else {
 					gestor.mostrarError(105, linea, (char)caracter);
-					estado = 0;
+					return null;
 				}
-				break;
 			}
 		}
 	}
@@ -313,7 +324,7 @@ public class AnalizadorLexico {
 		if(estado > 3) dec++;
 	}
 
-	private int calcularValor(){
+	private double calcularValor(){
 		return numero * (int)Math.pow(10, -dec);
 	}
 
@@ -343,4 +354,3 @@ public class AnalizadorLexico {
 		return -1;// TODO: Implementar.
 	}
 }
-
