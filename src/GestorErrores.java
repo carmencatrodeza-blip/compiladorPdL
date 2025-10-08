@@ -20,6 +20,15 @@ public class GestorErrores {
 		case 105:
 			System.err.println("Error Léxico [Línea " + linea + "]: Operador & no seguido de otro &.");
 			break;
+		case 106:
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante entera fuera de rango.");
+			break;
+		case 107:
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante real fuera de rango.");
+			break;
+		case 108:
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante cadena demasiado larga.");
+			break;
 		}
 	}
 }
