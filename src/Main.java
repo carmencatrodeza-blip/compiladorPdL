@@ -2,22 +2,34 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 
-// Todavía no sé si va correctamente jeje
-
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "src/codigoMal.txt";
+        String dirPrueba = "src/PIdG33.txt"; // dir/ficheroDePrueba.txt
         AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
-        try {
-            FileWriter ficheroTokens = new FileWriter("./tokens.txt");
-            SimpleEntry<String,Object> token;
-            do {
-                token = lexico.sigToken();
-                System.out.println(token);
-            } while (token != null && token.getKey() != "EOF");
-            ficheroTokens.close();
+        GestorErrores gestorErrores = new GestorErrores();
+
+        boolean fin = false;
+
+        try (FileWriter out = new FileWriter("tokens.txt")) {
+            while (!fin) {
+                SimpleEntry<String, Object> par = lexico.sigToken();
+                if (par == null) {
+                    System.err.println("Se detiene el análisis por error léxico previo.");
+                    fin = true;
+                } else {
+                    Token tok = Token.fromEntry(par);
+                    out.write(tok.toString());
+                    out.flush();
+                    if ("EOF".equals(par.getKey())) {
+                        fin = true;
+                    }
+                }
+            }
+            System.out.println("Lectura de fichero terminada.");
         } catch (IOException e) {
-            System.err.println("Error al escribir el archivo de tokens: " + e.getMessage());
+            System.err.println("Error al escribir tokens: " + e.getMessage());
+            gestorErrores.mostrarError(111, 0, ' ');
         }
     }
 }
+
