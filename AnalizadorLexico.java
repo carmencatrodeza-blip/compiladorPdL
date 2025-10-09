@@ -57,12 +57,11 @@ public class AnalizadorLexico {
 	private int caracter; // Caracter guardado como byte.
 	private CaracterEspecial ce; // Caracter especial actual.
 	private FileReader fr; // Lector de archivos.
-	private GestorErrores gestor = new GestorErrores();
-	private final TablaSimbolos tablaSimbolos = new TablaSimbolos();
+	private GestorErrores gestor;
+	private TablaSimbolos tablaSimbolos;
 	private HashSet<String> tablaSimbolosReservados;
 
 	public AnalizadorLexico(String nombreFichero) {
-		linea = 1;
 		try{
 			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
@@ -73,6 +72,10 @@ public class AnalizadorLexico {
 			System.err.println("Error al abrir el archivo de entrada.");
 		}
 		gestor = new GestorErrores();
+		linea = 1;
+		tablaSimbolos = new TablaSimbolos();
+		tablaSimbolosReservados = new HashSet<>();
+		inicializarTablaSimbolosReservados();
 	}
 
 	public SimpleEntry<String, Object> sigToken() {
@@ -175,9 +178,9 @@ public class AnalizadorLexico {
 						return new SimpleEntry<>(lexema, null);
 					}
 					else{
-						int pos = buscarTS(lexema);
+						int pos = tablaSimbolos.contieneId(lexema);
 						if(pos == -1){
-							pos = insertarTS(lexema, "id");
+							pos = tablaSimbolos.addSimbolo(lexema, "id");
 						}
 						return new SimpleEntry<>("id", pos);
 					}
@@ -189,9 +192,9 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					int pos = buscarTS(lexema);
+					int pos = tablaSimbolos.contieneId(lexema);
 					if(pos == -1){
-						pos = insertarTS(lexema, "id");
+						pos = tablaSimbolos.addSimbolo(lexema, "id");
 					}
 					return new SimpleEntry<>("id", pos);
 				}
@@ -346,36 +349,20 @@ public class AnalizadorLexico {
 		}
 		return "noEsReservada";
 	}
-
-	// Busca el identificador s en la tabla de símbolos y devuelve su posición (-1 si no está).
-	private int buscarTS(String s){
-		return tablaSimbolos.contieneId(s); // TODO: Implementar.
-	}
-
-	// Inserta el identificador s en la tabla de símbolos con el tipo dado y devuelve su posición.
-	private int insertarTS(String s, String tipo){
-		return tablaSimbolos.addSimbolo(s, tipo);// TODO: Implementar.
-	}
 	
 	public void inicializarTablaSimbolosReservados() {
-       // Instrucciones de entrada y salida
-       this.tablaSimbolosReservados.add("read");
-       this.tablaSimbolosReservados.add("write");
-
-       // Símbolos de declaración y tipos de datos
-       this.tablaSimbolosReservados.add("let");
-       this.tablaSimbolosReservados.add("boolean");
-       this.tablaSimbolosReservados.add("float");
-       this.tablaSimbolosReservados.add("int");
-       this.tablaSimbolosReservados.add("String");
-       this.tablaSimbolosReservados.add("\""); //salto de linea?
-
-       // Sentencias de llamadas, definición y retorno de funciones
-       this.tablaSimbolosReservados.add("while");
-       this.tablaSimbolosReservados.add("if");
-       this.tablaSimbolosReservados.add("else");
-       this.tablaSimbolosReservados.add("return");
-       this.tablaSimbolosReservados.add("function");
-       this.tablaSimbolosReservados.add("void");
-   }
+    	this.tablaSimbolosReservados.add("read");
+    	this.tablaSimbolosReservados.add("write");
+    	this.tablaSimbolosReservados.add("let");
+    	this.tablaSimbolosReservados.add("boolean");
+    	this.tablaSimbolosReservados.add("float");
+    	this.tablaSimbolosReservados.add("int");
+    	this.tablaSimbolosReservados.add("string");
+    	this.tablaSimbolosReservados.add("while");
+    	this.tablaSimbolosReservados.add("if");
+    	this.tablaSimbolosReservados.add("else");
+    	this.tablaSimbolosReservados.add("return");
+    	this.tablaSimbolosReservados.add("function");
+    	this.tablaSimbolosReservados.add("void");
+	}
 }
