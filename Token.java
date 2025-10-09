@@ -1,28 +1,27 @@
+import java.util.AbstractMap;
 
 public class Token {
-	private String codigo;
-	private String atributo;
+    private final String tipo;
+    private final Object valor;
 
-	public Token(String codigo, String atributo) {
-		this.codigo = codigo;
-		this.atributo = atributo;
-	}
-	
-	public String getCodigo() {
-		return codigo;
-	}
-	
-	public String getAtributo() {
-		return atributo;
-	}
-	
-	public String toFormatoTS() {
-		if(atributo != null && !atributo.isEmpty()) {
-			return "<" + codigo + ", " + atributo + ">";
-		}
-		else {
-			return "<" + codigo + ", " + ">";
-		}
-	}
+    public Token(String tipo, Object valor) {
+        this.tipo = (tipo == null) ? "" : tipo;
+        this.valor = (valor == null) ? "" : valor;
+    }
+
+    // Construcción directa desde SimpleEntry
+    public static Token fromEntry(AbstractMap.SimpleEntry<String,Object> entry) {
+        if (entry == null) {
+            return new Token("ERROR", "");
+        }
+        return new Token(entry.getKey(), entry.getValue());
+    }
+
+    @Override
+    public String toString() {
+        return "<" + tipo + ", " + valor + ">\n";
+    }
+
+    public String getTipo() { return tipo; }
+    public Object getValor() { return valor; }
 }
-
