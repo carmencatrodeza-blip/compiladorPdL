@@ -2,6 +2,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.HashSet;
 
 // Enum para los caracteres especiales
 enum CaracterEspecial {
@@ -57,6 +58,8 @@ public class AnalizadorLexico {
 	private CaracterEspecial ce; // Caracter especial actual.
 	private FileReader fr; // Lector de archivos.
 	private GestorErrores gestor = new GestorErrores();
+	private final TablaSimbolos tablaSimbolos = new TablaSimbolos();
+	private HashSet<String> tablaSimbolosReservados;
 
 	public AnalizadorLexico(String nombreFichero) {
 		linea = 1;
@@ -346,11 +349,33 @@ public class AnalizadorLexico {
 
 	// Busca el identificador s en la tabla de símbolos y devuelve su posición (-1 si no está).
 	private int buscarTS(String s){
-		return -1; // TODO: Implementar.
+		return tablaSimbolos.contieneId(s); // TODO: Implementar.
 	}
 
 	// Inserta el identificador s en la tabla de símbolos con el tipo dado y devuelve su posición.
 	private int insertarTS(String s, String tipo){
-		return -1;// TODO: Implementar.
+		return tablaSimbolos.addSimbolo(s, tipo);// TODO: Implementar.
 	}
+	
+	public void inicializarTablaSimbolosReservados() {
+       // Instrucciones de entrada y salida
+       this.tablaSimbolosReservados.add("read");
+       this.tablaSimbolosReservados.add("write");
+
+       // Símbolos de declaración y tipos de datos
+       this.tablaSimbolosReservados.add("let");
+       this.tablaSimbolosReservados.add("boolean");
+       this.tablaSimbolosReservados.add("float");
+       this.tablaSimbolosReservados.add("int");
+       this.tablaSimbolosReservados.add("String");
+       this.tablaSimbolosReservados.add("\""); //salto de linea?
+
+       // Sentencias de llamadas, definición y retorno de funciones
+       this.tablaSimbolosReservados.add("while");
+       this.tablaSimbolosReservados.add("if");
+       this.tablaSimbolosReservados.add("else");
+       this.tablaSimbolosReservados.add("return");
+       this.tablaSimbolosReservados.add("function");
+       this.tablaSimbolosReservados.add("void");
+   }
 }
