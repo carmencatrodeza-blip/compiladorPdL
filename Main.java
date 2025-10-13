@@ -28,6 +28,9 @@ public class Main {
                     }
                 }
             }
+            try (BufferedWriter ts = new BufferedWriter(new FileWriter("tablaSimbolos.txt"))) {
+                ts.write(lexico.getTablaSimbolos().toString());
+            }
 
             System.out.println("Lectura de fichero terminada.");
         } catch (IOException e) {
