@@ -38,17 +38,6 @@ public class GestorErrores {
 		case 111:
 			System.err.println("Error Léxico [Línea " + linea + "]: Error al escribir los tokens en tokens.txt.");
 			break;
-		case 112:
-			System.err.println("Error Léxico [Línea " + linea + "]: Los identificadores solo pueden contener letras, digitos y guiones bajos.");
-			break;
-		case 113:
-			System.err.println("Error Léxico [Línea " + linea + "]: Los comentarios solo pueden empezar por doble barra.");
-			break;
-		case 114:
-			System.err.println("Error Léxico [Línea " + linea + "]: Caracter" + caracter + " no válido."); // ? == Error 101? 
-			break;
-
-		// ? Donde se utilizan los nuevos casos?
 		}
 	}
 }
