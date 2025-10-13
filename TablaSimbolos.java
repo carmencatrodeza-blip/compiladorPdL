@@ -1,4 +1,5 @@
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TablaSimbolos {
 
@@ -35,6 +36,29 @@ public class TablaSimbolos {
     }
 
     // (Opcional) getters si luego quieres inspeccionar la TS
-    public int size() { return tabla.size(); }
-    public Simbolo get(String id) { return tabla.get(id); }
+    public int size() { 
+        return tabla.size(); 
+    }
+
+    public Simbolo get(String id) { 
+        return tabla.get(id); 
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tabla de Símbolos\n");
+        sb.append("__________________________________\n\n");
+        sb.append(String.format("%-6s %-20s %-15s%n", "POS", "LEXEMA", "TIPO"));
+        sb.append("__________________________________\n\n");
+
+        for(Map.Entry<String,Simbolo> entry : tabla.entrySet()){
+            String lexema = entry.getKey();
+            Simbolo simbolo = entry.getValue();
+            sb.append(String.format("%-6d %-20s %-15s%n",
+                simbolo.getPos(), lexema, simbolo.getTipo()));
+    }
+    return sb.toString();
+    }
 }
+
