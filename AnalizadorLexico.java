@@ -53,25 +53,27 @@ public class AnalizadorLexico {
 	private TablaSimbolos tablaSimbolos;
 
 	public AnalizadorLexico(String nombreFichero) {
+		gestor = new GestorErrores();
+		linea = 1;
+		tablaSimbolos = new TablaSimbolos();
+		inicializarTablaSimbolosReservados();
 		try{
 			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (FileNotFoundException fnf){
-			System.err.println("Archivo de entrada no encontrado.");
+			gestor.mostrarError(109, linea, ' ');
 		} catch (IOException ioe){
-			System.err.println("Error al abrir el archivo de entrada.");
+			gestor.mostrarError(110, linea, ' ');
 		}
-		gestor = new GestorErrores();
-		linea = 1;
-		tablaSimbolos = new TablaSimbolos();
-		inicializarTablaSimbolosReservados();
 	}
 
 	public SimpleEntry<String, Object> sigToken() {
 		estado = 0;
 		lexema = "";
 		numero = 0;
+		dec = 0;
+		contador = 0;
 		while (true){
 			switch(estado){
 			case 0: // Estado inicial
@@ -171,7 +173,7 @@ public class AnalizadorLexico {
 					else{
 						int pos = tablaSimbolos.contieneId(lexema);
 						if(pos == -1){
-							pos = tablaSimbolos.addSimbolo(lexema, "id");
+							pos = tablaSimbolos.addSimbolo(lexema);
 						}
 						return new SimpleEntry<>("id", pos);
 					}
@@ -185,7 +187,7 @@ public class AnalizadorLexico {
 				else{
 					int pos = tablaSimbolos.contieneId(lexema);
 					if(pos == -1){
-						pos = tablaSimbolos.addSimbolo(lexema, "id");
+						pos = tablaSimbolos.addSimbolo(lexema);
 					}
 					return new SimpleEntry<>("id", pos);
 				}
@@ -312,7 +314,7 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
-			ioe.printStackTrace();
+			gestor.mostrarError(110, linea, ' ');
 		}
 	}
 
@@ -322,17 +324,11 @@ public class AnalizadorLexico {
 		if(estado > 3) dec++;
 	}
 
-	private double calcularValor(){
-		return numero * (int)Math.pow(10, -dec);
-	}
+	private double calcularValor(){ return numero * (int)Math.pow(10, -dec); }
 
-	private boolean esLetra(int c) {
-		return (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
-	}
+	private boolean esLetra(int c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }
 
-	private boolean esDigito(int c) {
-		return (c >= 48 && c <= 57);
-	}
+	private boolean esDigito(int c) { return (c >= 48 && c <= 57); }
 
 	private String esReservada(String s) {
 		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
@@ -345,12 +341,10 @@ public class AnalizadorLexico {
 	public void inicializarTablaSimbolosReservados() {
 		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
 		for (String s : reservadas) {
-			this.tablaSimbolos.addSimbolo(s,"id");
+			this.tablaSimbolos.addSimbolo(s);
 		}
 	}
 
-	public TablaSimbolos getTablaSimbolos() {
-		return tablaSimbolos;
-	}
-	
+	public TablaSimbolos getTablaSimbolos() { return tablaSimbolos; }
+
 }
