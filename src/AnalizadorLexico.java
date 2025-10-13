@@ -2,7 +2,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.HashSet;
 
 // Enum para los caracteres especiales
 enum CaracterEspecial {
@@ -41,13 +40,6 @@ enum CaracterEspecial {
 
 public class AnalizadorLexico {
 
-	// TODO: Añadir tabla de símbolos. 
-	/*
-    ¿HashMap: id -> (líneaTS, tipo)?
-    ¿LinkedHashMap: id -> tipo?
-    Si solo necesitamos lineaTS para el token, HashMap: id -> tipo y variable lineaTS aparte.
-	 */
-
 	private int linea; // Número de línea del documento.
 	private int estado; // Estado del autómata.
 	private String lexema; // Variable para construir el lexema.
@@ -59,7 +51,6 @@ public class AnalizadorLexico {
 	private FileReader fr; // Lector de archivos.
 	private GestorErrores gestor;
 	private TablaSimbolos tablaSimbolos;
-	private HashSet<String> tablaSimbolosReservados;
 
 	public AnalizadorLexico(String nombreFichero) {
 		try{
@@ -74,7 +65,6 @@ public class AnalizadorLexico {
 		gestor = new GestorErrores();
 		linea = 1;
 		tablaSimbolos = new TablaSimbolos();
-		tablaSimbolosReservados = new HashSet<>();
 		inicializarTablaSimbolosReservados();
 	}
 
@@ -109,6 +99,7 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.COMILLAS){
 					estado = 6;
+					lexema += (char)caracter;
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.BARRA){
@@ -243,6 +234,7 @@ public class AnalizadorLexico {
 				break;
 			case 6:
 				if (ce == CaracterEspecial.COMILLAS) {
+					lexema += (char)caracter;
 					leerCaracter();
 					if (contador > 64) {
 						gestor.mostrarError(108, linea, (char)caracter);
@@ -351,18 +343,14 @@ public class AnalizadorLexico {
 	}
 	
 	public void inicializarTablaSimbolosReservados() {
-    	this.tablaSimbolosReservados.add("read");
-    	this.tablaSimbolosReservados.add("write");
-    	this.tablaSimbolosReservados.add("let");
-    	this.tablaSimbolosReservados.add("boolean");
-    	this.tablaSimbolosReservados.add("float");
-    	this.tablaSimbolosReservados.add("int");
-    	this.tablaSimbolosReservados.add("string");
-    	this.tablaSimbolosReservados.add("while");
-    	this.tablaSimbolosReservados.add("if");
-    	this.tablaSimbolosReservados.add("else");
-    	this.tablaSimbolosReservados.add("return");
-    	this.tablaSimbolosReservados.add("function");
-    	this.tablaSimbolosReservados.add("void");
+		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
+		for (String s : reservadas) {
+			this.tablaSimbolos.addSimbolo(s,"id");
+		}
 	}
+
+	public TablaSimbolos getTablaSimbolos() {
+		return tablaSimbolos;
+	}
+	
 }
