@@ -109,17 +109,14 @@ public class TablaSimbolos {
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("Tabla de Símbolos\n");
-        sb.append("__________________________________\n\n");
-        sb.append(String.format("%-6s %-64s %-15s%n", "POS", "LEXEMA", "TIPO"));
-        sb.append("__________________________________\n\n");
+        sb.append("CONTENIDOS DE LA TABLA #0: \n");
 
         for(Map.Entry<String,Simbolo> entry : tabla.entrySet()){
             String lexema = entry.getKey();
-            Simbolo simbolo = entry.getValue();
-            sb.append(String.format("%-6d %-64s %-15s%n",
-                simbolo.getPos(), lexema, simbolo.getTipo()));
+            sb.append("* LEXEMA: '").append(lexema).append("'\n");
+            sb.append("      Atributos:\n");
         }
+        sb.append("___________________________\n");
         return sb.toString();
     }
 }
