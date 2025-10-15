@@ -5,7 +5,7 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "src/prueba55.txt"; // dir/ficheroDePrueba.txt
+        String dirPrueba = "src/PIdG33.txt"; // dir/ficheroDePrueba.txt
         AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
         GestorErrores gestorErrores = new GestorErrores();
 

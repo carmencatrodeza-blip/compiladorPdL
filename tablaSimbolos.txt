@@ -1,0 +1,35 @@
+CONTENIDOS DE LA TABLA #0: 
+* LEXEMA: 'n1'
+  Atributos:
+--------- ---------
+* LEXEMA: 'n2'
+  Atributos:
+--------- ---------
+* LEXEMA: 'f1'
+  Atributos:
+--------- ---------
+* LEXEMA: 'f2'
+  Atributos:
+--------- ---------
+* LEXEMA: 'l1'
+  Atributos:
+--------- ---------
+* LEXEMA: 'l2'
+  Atributos:
+--------- ---------
+* LEXEMA: 'cad'
+  Atributos:
+--------- ---------
+* LEXEMA: 'lllll'
+  Atributos:
+--------- ---------
+* LEXEMA: 'ff'
+  Atributos:
+--------- ---------
+* LEXEMA: 'ss'
+  Atributos:
+--------- ---------
+* LEXEMA: 'letglobal'
+  Atributos:
+--------- ---------
+---------------------------------------------------

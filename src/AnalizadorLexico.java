@@ -56,7 +56,7 @@ public class AnalizadorLexico {
 		gestor = new GestorErrores();
 		linea = 1;
 		tablaSimbolos = new TablaSimbolos();
-		inicializarTablaSimbolosReservados();
+		//inicializarTablaSimbolosReservados();
 		try{
 			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
@@ -338,12 +338,12 @@ public class AnalizadorLexico {
 		return "noEsReservada";
 	}
 	
-	public void inicializarTablaSimbolosReservados() {
-		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
-		for (String s : reservadas) {
-			this.tablaSimbolos.addSimbolo(s);
-		}
-	}
+	//public void inicializarTablaSimbolosReservados() {
+		//String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
+		//for (String s : reservadas) {
+			//this.tablaSimbolos.addSimbolo(s);
+		//}
+	//}
 
 	public TablaSimbolos getTablaSimbolos() { return tablaSimbolos; }
 
