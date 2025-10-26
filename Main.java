@@ -5,9 +5,15 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "src/prueba55.txt"; // dir/ficheroDePrueba.txt
+        String dirPrueba = "src/PIdG33.txt"; // dir/ficheroDePrueba.txt
         AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
         GestorErrores gestorErrores = new GestorErrores();
+
+        /*
+        TODO: Las tablas de simbolos son independientes de los analizadores
+        mapTablas = new HashMap<String, TablaSimbolos>();
+        empareja: etiqueta -> tablaSimbolos
+         */
 
         boolean fin = false;
 
@@ -30,12 +36,15 @@ public class Main {
             }
             try (BufferedWriter ts = new BufferedWriter(new FileWriter("tablaSimbolos.txt"))) {
                 ts.write(lexico.getTablaSimbolos().toString());
+            } catch (IOException e) {
+                System.err.println("Error al escribir la tabla de símbolos: " + e.getMessage());
+                gestorErrores.mostrarError(112, 0, ' ', null);
             }
 
             System.out.println("Lectura de fichero terminada.");
         } catch (IOException e) {
             System.err.println("Error al escribir tokens: " + e.getMessage());
-            gestorErrores.mostrarError(111, 0, ' ');
+            gestorErrores.mostrarError(111, 0, ' ', null);
         }
     }
 }
