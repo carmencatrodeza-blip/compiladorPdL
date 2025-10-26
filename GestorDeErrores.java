@@ -9,10 +9,10 @@ public class GestorErrores {
 			System.err.println("Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.");
 			break;
 		case 102:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera: \"" + lexema + "\".");
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera.");
 			break;
 		case 103:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal.");
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal: \"" + lexema + "\".");
 			break;
 		case 104:
 			System.err.println("Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.");
