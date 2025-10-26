@@ -44,7 +44,7 @@ public class AnalizadorLexico {
 	private int estado; // Estado del autómata.
 	private String lexema; // Variable para construir el lexema.
 	private int contador; // Contador de caracteres leídos.
-	private int numero; // Variable para calcular números.
+	private long numero; // Variable para calcular números.
 	private int dec; // Variable para la parte decimal de números reales.
 	private int caracter; // Caracter guardado como byte.
 	private CaracterEspecial ce; // Caracter especial actual.
@@ -62,9 +62,9 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (FileNotFoundException fnf){
-			gestor.mostrarError(109, linea, ' ');
+			gestor.mostrarError(109, 0, ' ', null);
 		} catch (IOException ioe){
-			gestor.mostrarError(110, linea, ' ');
+			gestor.mostrarError(110, 0, ' ', null);
 		}
 	}
 
@@ -91,6 +91,7 @@ public class AnalizadorLexico {
 				}
 				else if(esDigito(caracter)){
 					construirNumero(caracter);
+					lexema += (char)caracter;
 					estado = 3;
 					leerCaracter();
 				}
@@ -109,7 +110,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.BARRA_INV){
-					gestor.mostrarError(104, linea, (char)caracter);
+					gestor.mostrarError(104, linea, (char)caracter, null);
 					return null;
 				}
 				else if(ce == CaracterEspecial.IGUAL){
@@ -145,14 +146,15 @@ public class AnalizadorLexico {
 					return new SimpleEntry<>("coma", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO){
-					gestor.mostrarError(102, linea, (char)caracter);
+					// ! Necesito imprimir " .55 " y corto al leer el punto
+					gestor.mostrarError(102, linea, (char)caracter, null);
 					return null;
 				}
 				else if(caracter == -1){
 					return new SimpleEntry<>("EOF", null);
 				}
 				else{
-					gestor.mostrarError(101, linea, (char)caracter);
+					gestor.mostrarError(101, linea, (char)caracter, null);
 					return null;
 				}
 				break;
@@ -194,41 +196,47 @@ public class AnalizadorLexico {
 				break;
 			case 3:
 				if(esDigito(caracter)){
+					lexema += (char)caracter;
 					construirNumero(caracter);
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.PUNTO){
 					estado =  4;
+					lexema += (char)caracter;
 					leerCaracter();
 				}
 				else{
 					if (numero > 32767){
-						gestor.mostrarError(106, linea, (char)caracter);
+						gestor.mostrarError(106, linea, (char)caracter, lexema);
 						return null;
 					}
-					return new SimpleEntry<>("entero", numero);
+					return new SimpleEntry<>("entero", (int)numero);
 				}
 				break;
 			case 4:
 				if(esDigito(caracter)){
 					estado = 5;
+					lexema += (char)caracter;
+					dec--;
 					construirNumero(caracter);
 					leerCaracter();
 				}
 				else{
-					gestor.mostrarError(103, linea, (char)caracter);
+					gestor.mostrarError(103, linea, (char)caracter, lexema);
 					return null;
 				}
 				break;
 			case 5:
 				if(esDigito(caracter)){
+					lexema += (char)caracter;
 					construirNumero(caracter);
+					dec--;
 					leerCaracter();
 				}
 				else{
 					double output = calcularValor();
 					if (output > 117549436.0f){
-						gestor.mostrarError(107, linea, (char)caracter);
+						gestor.mostrarError(107, linea, (char)caracter, lexema);
 						return null;
 					}
 					return new SimpleEntry<>("real", calcularValor());
@@ -239,7 +247,7 @@ public class AnalizadorLexico {
 					lexema += (char)caracter;
 					leerCaracter();
 					if (contador > 64) {
-						gestor.mostrarError(108, linea, (char)caracter);
+						gestor.mostrarError(108, linea, (char)caracter, lexema);
 						return null;
 					}
 					return new SimpleEntry<>("cadena", lexema);
@@ -302,7 +310,7 @@ public class AnalizadorLexico {
 					return new SimpleEntry<>("y", null);
 				}
 				else {
-					gestor.mostrarError(105, linea, (char)caracter);
+					gestor.mostrarError(105, linea, (char)caracter, null);
 					return null;
 				}
 			}
@@ -314,17 +322,16 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
-			gestor.mostrarError(110, linea, ' ');
+			gestor.mostrarError(110, linea, ' ', null);
 		}
 	}
 
 	private void construirNumero(int caracter){
 		int num = caracter - 48; // Transformar de ASCII a dígito.
 		numero = numero * 10 + num; // Construir el número.
-		if(estado > 3) dec++;
 	}
 
-	private double calcularValor(){ return numero * (int)Math.pow(10, -dec); }
+	private double calcularValor(){ return (double)numero * Math.pow(10, dec); }
 
 	private boolean esLetra(int c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }
 
