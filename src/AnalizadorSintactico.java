@@ -1,24 +1,27 @@
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.Set;
+import java.util.Map;
 
 public class AnalizadorSintactico {
     
-    private AnalizadorLexico lexico;
+    private final AnalizadorLexico lexico;
     private Stack<String> pila;
     private HashMap<String, HashMap<String, String>> tabla; // No terminal -> (Terminal -> Regla)
     private Set<String> terminales;
+    private Map<String, String> nombresTerminales; // nombre token -> nombre terminal
 
     public AnalizadorSintactico(AnalizadorLexico lexico) {
         this.lexico = lexico;
         inicializarPila();
         inicializarTabla();
-        inicializarSet();
+        inicializarSetTerminales();
+        inicializarMapaNombres();
     }
 
     public String parse(){
         String parse = "";
-        String tokenActual = lexico.sigToken().getKey();
+        String tokenActual = traducirTokenATerminal(lexico.sigToken().getKey());
         
         while (!pila.isEmpty()) {
             String topePila = pila.peek();
@@ -26,9 +29,9 @@ public class AnalizadorSintactico {
             if (terminales.contains(topePila)) {
                 if (topePila.equals(tokenActual)) {
                     pila.pop();
-                    tokenActual = lexico.sigToken().getKey();
+                    tokenActual = traducirTokenATerminal(lexico.sigToken().getKey());
                 } else {
-                    GestorErrores.obtenerInstancia().mostrarError(113, lexico.getLinea(), topePila, tokenActual);
+                    GestorErrores.obtenerInstancia().mostrarError(201, lexico.getLinea(), topePila, tokenActual);
                     return "0";
                 }
             } else {
@@ -46,7 +49,7 @@ public class AnalizadorSintactico {
                         }
                     }
                 } else {
-                    GestorErrores.obtenerInstancia().mostrarError(114, lexico.getLinea(), topePila, tokenActual);
+                    GestorErrores.obtenerInstancia().mostrarError(202, lexico.getLinea(), topePila, tokenActual);
                     return "0";
                 }
             }
@@ -56,7 +59,7 @@ public class AnalizadorSintactico {
             System.out.println("Análisis sintáctico completado con éxito.");
             return parse.substring(0, parse.length()-1); // Eliminar el espacio final.
         } else {
-            GestorErrores.obtenerInstancia().mostrarError(115, lexico.getLinea(), "$", tokenActual);
+            GestorErrores.obtenerInstancia().mostrarError(203, lexico.getLinea(), "$", tokenActual);
             return "0";
         }
     }
@@ -68,13 +71,33 @@ public class AnalizadorSintactico {
         pila.push("P"); // Símbolo de inicio
     }
 
-    private void inicializarSet() {
+    private void inicializarSetTerminales() {
         terminales = Set.of(
             "function", "if", "let", "read", "return", "while", "write", "id",
             "$", "(", ")", ";", "=", "/=", "/", ",", "{", "}", "boolean", "float",
             "int", "string", "void", "entero", "real", "cadena", "&&", "=="
         );
     }
+
+    private void inicializarMapaNombres() {
+        nombresTerminales = new HashMap<>();
+        nombresTerminales.put("asigDiv", "/=");
+        nombresTerminales.put("asig", "=");
+        nombresTerminales.put("coma", ",");
+        nombresTerminales.put("puntoComa", ";");
+        nombresTerminales.put("parIzq", "(");
+        nombresTerminales.put("parDer", ")");
+        nombresTerminales.put("llaveIzq", "{");
+        nombresTerminales.put("llaveDer", "}");
+        nombresTerminales.put("div", "/");
+        nombresTerminales.put("y", "&&");
+        nombresTerminales.put("igual", "==");
+        nombresTerminales.put("EOF", "$");
+    }
+
+    private String traducirTokenATerminal(String token) {
+        return nombresTerminales.containsKey(token) ? nombresTerminales.get(token) : token;
+}
 
     // Inicializa la tabla descendente de análisis sintáctico. Guarda los precedentes de las reglas ya que es lo único que se usará.
     private void inicializarTabla() {

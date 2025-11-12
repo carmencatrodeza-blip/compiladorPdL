@@ -1,20 +1,29 @@
 CONTENIDOS DE LA TABLA #0: 
-* LEXEMA: 's'
+* LEXEMA: 'a'
   Atributos:
 --------- ---------
 * LEXEMA: 'b'
   Atributos:
 --------- ---------
-* LEXEMA: 'c'
+* LEXEMA: 'cc'
   Atributos:
 --------- ---------
-* LEXEMA: 'n'
+* LEXEMA: 'number'
   Atributos:
 --------- ---------
-* LEXEMA: 'f'
+* LEXEMA: 'real'
   Atributos:
 --------- ---------
-* LEXEMA: 'y'
+* LEXEMA: 'num1'
+  Atributos:
+--------- ---------
+* LEXEMA: 'operacion'
+  Atributos:
+--------- ---------
+* LEXEMA: 'num_1'
+  Atributos:
+--------- ---------
+* LEXEMA: 'num_2'
   Atributos:
 --------- ---------
 ---------------------------------------------------

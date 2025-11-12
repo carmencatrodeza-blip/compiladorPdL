@@ -1,13 +1,52 @@
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "tx\\anexo\\AL-TS-27_10\\programa-fuente-valido-3.txt"; // dir/ficheroDePrueba.txt
-        AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
+        String dirPrueba = "src\\PIdG33.txt";
+        
+        // Prueba del Analizador Léxico
+        FileReader fr = abrirArchivo(dirPrueba);
+        if (fr != null) {
+            AnalizadorLexico lexico = new AnalizadorLexico(fr);
+            pruebaLexico(lexico);
+            cerrarArchivo(fr);
+        }
+        
+        // Prueba del Analizador Sintáctico
+        fr = abrirArchivo(dirPrueba);
+        if (fr != null) {
+            AnalizadorLexico lexico = new AnalizadorLexico(fr);
+            AnalizadorSintactico sintactico = new AnalizadorSintactico(lexico);
+            pruebaSintactico(sintactico);
+            cerrarArchivo(fr);
+        }
+    }
 
+    private static FileReader abrirArchivo(String ruta) {
+        try {
+            return new FileReader(ruta);
+        } catch (FileNotFoundException fnf) {
+            GestorErrores.obtenerInstancia().mostrarError(1);
+            return null;
+        }
+    }
+
+    private static void cerrarArchivo(FileReader fr) {
+        try {
+            if (fr != null) {
+                fr.close();
+            }
+        } catch (IOException e) {
+            GestorErrores.obtenerInstancia().mostrarError(6);
+        }
+    }
+
+    private static void pruebaLexico(AnalizadorLexico lexico) {
         boolean fin = false;
 
         try (BufferedWriter out = new BufferedWriter(new FileWriter("tokens.txt"))) {
@@ -16,7 +55,6 @@ public class Main {
 
                 if (par == null) {
                     System.err.println("Se detiene el análisis por error léxico previo.");
-                    // Siempre intentamos volcar la tabla actual antes de salir
                     escribirTabla(lexico);
                     fin = true;
                 } else {
@@ -25,16 +63,10 @@ public class Main {
                         out.write(tok.toString());
                         out.flush();
                     } catch (IOException e) {
-                        // Error al escribir tokens.txt
-                        System.err.println("Error al escribir tokens: " + e.getMessage());
-                        GestorErrores.obtenerInstancia().mostrarError(111);
-                        // Intentar escribir la tabla aunque fallara tokens.txt
+                        GestorErrores.obtenerInstancia().mostrarError(3);
                         escribirTabla(lexico);
-                        fin = true;
                         break;
                     }
-
-                    // Actualizamos el fichero de la tabla tras cada token para que exista si se corta la ejecución
                     escribirTabla(lexico);
 
                     if ("EOF".equals(par.getKey())) {
@@ -44,11 +76,20 @@ public class Main {
                 }
             }
         } catch (IOException e) {
-            // Error al abrir/escribir tokens.txt (catch del try-with-resources)
-            System.err.println("Error al escribir tokens: " + e.getMessage());
-            GestorErrores.obtenerInstancia().mostrarError(111);
-            // Intentar escribir la tabla aunque el writer de tokens fallara
+            GestorErrores.obtenerInstancia().mostrarError(3);
             escribirTabla(lexico);
+        }
+    }
+
+    private static void pruebaSintactico(AnalizadorSintactico sintactico) {
+        String resultadoParse = sintactico.parse();
+
+        try (BufferedWriter out = new BufferedWriter(new FileWriter("parse.txt"))) {
+            out.write("descendente " + resultadoParse);
+            out.flush();
+            System.out.println("Parse completado. Resultado guardado en parse.txt");
+        } catch (IOException e) {
+            GestorErrores.obtenerInstancia().mostrarError(5);
         }
     }
 
@@ -57,8 +98,7 @@ public class Main {
             ts.write(lexico.getTablaSimbolos().toString());
             ts.flush();
         } catch (IOException e) {
-            System.err.println("Error al escribir la tabla de símbolos: " + e.getMessage());
-            GestorErrores.obtenerInstancia().mostrarError(112);
+            GestorErrores.obtenerInstancia().mostrarError(4);
         }
     }
 }

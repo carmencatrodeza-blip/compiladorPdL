@@ -11,17 +11,23 @@ public class GestorErrores {
 
 	public void mostrarError(int codigo){
 		switch(codigo){
-		case 109:
+		case 1:
 			System.err.println("Error al abrir el fichero.");
 			break;
-		case 110:
+		case 2:
 			System.err.println("Error al leer el fichero.");
 			break;
-		case 111:
+		case 3:
 			System.err.println("Error al escribir los tokens en tokens.txt.");
 			break;
-		case 112:
+		case 4:
 			System.err.println("Error al escribir la tabla de símbolos en tablaSimbolos.txt.");
+			break;
+		case 5:
+			System.err.println("Error al escribir el parse en parse.txt.");
+			break;
+		case 6:
+			System.err.println("Error al cerrar el fichero.");
 			break;
 		}
 	}
@@ -60,13 +66,13 @@ public class GestorErrores {
 
 	public void mostrarError(int codigo, int linea, String topePila, String tokenActual){
 		switch(codigo){
-		case 113:
+		case 201:
 			System.err.println("Error sintáctico [Línea " + linea + "]: Se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'");
 			break;
-		case 114:
+		case 202:
 			System.err.println("Error sintáctico [Línea " + linea + "]: No hay regla para el no terminal '" + topePila + "' con el token actual '" + tokenActual + "'");
 			break;
-		case 115:
+		case 203:
 			System.err.println("Error sintáctico: Entrada no consumida después del análisis."); // ? Mejorar mensaje
 			break;
 		}

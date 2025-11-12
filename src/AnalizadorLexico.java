@@ -1,6 +1,5 @@
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Set;
 
@@ -53,18 +52,16 @@ public class AnalizadorLexico {
 	private Set<String> palabrasReservadas; 
 	private TablaSimbolos tablaSimbolos;
 
-	public AnalizadorLexico(String nombreFichero) {
+	public AnalizadorLexico(FileReader fr) {
+		this.fr = fr;
 		linea = 1;
 		tablaSimbolos = new TablaSimbolos();
 		inicializarSetSimbolosReservados();
 		try{
-			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
-		} catch (FileNotFoundException fnf){
-			GestorErrores.obtenerInstancia().mostrarError(109);
 		} catch (IOException ioe){
-			GestorErrores.obtenerInstancia().mostrarError(110);
+			GestorErrores.obtenerInstancia().mostrarError(2);
 		}
 	}
 
@@ -145,16 +142,17 @@ public class AnalizadorLexico {
 					leerCaracter();
 					return new SimpleEntry<>("coma", null);
 				}
-			else if(ce == CaracterEspecial.PUNTO){
-				// ! Necesito imprimir " .55 " y corto al leer el punto
-				GestorErrores.obtenerInstancia().mostrarError(102, linea, (char)caracter, null);
-				return null;
+				else if(ce == CaracterEspecial.PUNTO){
+					// ! Necesito imprimir " .55 " y corto al leer el punto
+					GestorErrores.obtenerInstancia().mostrarError(102, linea, (char)caracter, null);
+					return null;
 				}
 				else if(caracter == -1){
 					return new SimpleEntry<>("EOF", null);
 				}
 				else{
 					GestorErrores.obtenerInstancia().mostrarError(101, linea, (char)caracter, null);
+					System.err.println("DEBUG: Carácter ASCII = " + caracter + " (0x" + Integer.toHexString(caracter) + ")");
 					return null;
 				}
 				break;
@@ -322,7 +320,7 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
-			GestorErrores.obtenerInstancia().mostrarError(110);
+			GestorErrores.obtenerInstancia().mostrarError(2);
 		}
 	}
 
