@@ -2,6 +2,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Set;
 
 // Enum para los caracteres especiales
 enum CaracterEspecial {
@@ -49,22 +50,21 @@ public class AnalizadorLexico {
 	private int caracter; // Caracter guardado como byte.
 	private CaracterEspecial ce; // Caracter especial actual.
 	private FileReader fr; // Lector de archivos.
-	private GestorErrores gestor;
+	private Set<String> palabrasReservadas; 
 	private TablaSimbolos tablaSimbolos;
 
 	public AnalizadorLexico(String nombreFichero) {
-		gestor = new GestorErrores();
 		linea = 1;
 		tablaSimbolos = new TablaSimbolos();
-		//inicializarTablaSimbolosReservados();
+		inicializarSetSimbolosReservados();
 		try{
 			fr = new FileReader(nombreFichero);
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (FileNotFoundException fnf){
-			gestor.mostrarError(109, 0, ' ', null);
+			GestorErrores.obtenerInstancia().mostrarError(109);
 		} catch (IOException ioe){
-			gestor.mostrarError(110, 0, ' ', null);
+			GestorErrores.obtenerInstancia().mostrarError(110);
 		}
 	}
 
@@ -109,9 +109,9 @@ public class AnalizadorLexico {
 					estado = 8;
 					leerCaracter();
 				}
-				else if(ce == CaracterEspecial.BARRA_INV){
-					gestor.mostrarError(104, linea, (char)caracter, null);
-					return null;
+			else if(ce == CaracterEspecial.BARRA_INV){
+				GestorErrores.obtenerInstancia().mostrarError(104, linea, (char)caracter, null);
+				return null;
 				}
 				else if(ce == CaracterEspecial.IGUAL){
 					estado = 10;
@@ -145,16 +145,16 @@ public class AnalizadorLexico {
 					leerCaracter();
 					return new SimpleEntry<>("coma", null);
 				}
-				else if(ce == CaracterEspecial.PUNTO){
-					// ! Necesito imprimir " .55 " y corto al leer el punto
-					gestor.mostrarError(102, linea, (char)caracter, null);
-					return null;
+			else if(ce == CaracterEspecial.PUNTO){
+				// ! Necesito imprimir " .55 " y corto al leer el punto
+				GestorErrores.obtenerInstancia().mostrarError(102, linea, (char)caracter, null);
+				return null;
 				}
 				else if(caracter == -1){
 					return new SimpleEntry<>("EOF", null);
 				}
 				else{
-					gestor.mostrarError(101, linea, (char)caracter, null);
+					GestorErrores.obtenerInstancia().mostrarError(101, linea, (char)caracter, null);
 					return null;
 				}
 				break;
@@ -169,7 +169,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					if(esReservada(lexema) != "noEsReservada"){
+					if(!esReservada(lexema).equals("noEsReservada")){
 						return new SimpleEntry<>(lexema, null);
 					}
 					else{
@@ -206,9 +206,9 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					if (numero > 32767){
-						gestor.mostrarError(106, linea, (char)caracter, lexema);
-						return null;
+				if (numero > 32767){
+					GestorErrores.obtenerInstancia().mostrarError(106, linea, (char)caracter, lexema);
+					return null;
 					}
 					return new SimpleEntry<>("entero", (int)numero);
 				}
@@ -222,7 +222,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					gestor.mostrarError(103, linea, (char)caracter, lexema);
+					GestorErrores.obtenerInstancia().mostrarError(103, linea, (char)caracter, lexema);
 					return null;
 				}
 				break;
@@ -236,7 +236,7 @@ public class AnalizadorLexico {
 				else{
 					double output = calcularValor();
 					if (output > 117549436.0f){
-						gestor.mostrarError(107, linea, (char)caracter, lexema);
+						GestorErrores.obtenerInstancia().mostrarError(107, linea, (char)caracter, lexema);
 						return null;
 					}
 					return new SimpleEntry<>("real", calcularValor());
@@ -247,7 +247,7 @@ public class AnalizadorLexico {
 					lexema += (char)caracter;
 					leerCaracter();
 					if (contador > 64) {
-						gestor.mostrarError(108, linea, (char)caracter, lexema);
+						GestorErrores.obtenerInstancia().mostrarError(108, linea, (char)caracter, lexema);
 						return null;
 					}
 					return new SimpleEntry<>("cadena", lexema);
@@ -310,7 +310,7 @@ public class AnalizadorLexico {
 					return new SimpleEntry<>("y", null);
 				}
 				else {
-					gestor.mostrarError(105, linea, (char)caracter, null);
+					GestorErrores.obtenerInstancia().mostrarError(105, linea, (char)caracter, null);
 					return null;
 				}
 			}
@@ -322,7 +322,7 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
-			gestor.mostrarError(110, linea, ' ', null);
+			GestorErrores.obtenerInstancia().mostrarError(110);
 		}
 	}
 
@@ -337,13 +337,14 @@ public class AnalizadorLexico {
 
 	private boolean esDigito(int c) { return (c >= 48 && c <= 57); }
 
-	private String esReservada(String s) {
-		String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
-		for (String r : reservadas) {
-			if (s.equals(r)) return s;
-		}
-		return "noEsReservada";
+	private void inicializarSetSimbolosReservados() {
+		palabrasReservadas = Set.of(
+			"boolean","float","function","if","int","let","read",
+			"return","string","void","while","write"
+		);
 	}
+
+	private String esReservada(String s) { return (palabrasReservadas.contains(s)) ? s : "noEsReservada"; }
 	
 	//public void inicializarTablaSimbolosReservados() {
 		//String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
@@ -353,5 +354,7 @@ public class AnalizadorLexico {
 	//}
 
 	public TablaSimbolos getTablaSimbolos() { return tablaSimbolos; }
+
+	public int getLinea() { return linea; }
 
 }

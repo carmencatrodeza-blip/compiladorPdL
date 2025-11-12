@@ -1,7 +1,30 @@
 public class GestorErrores {
-
-    public GestorErrores() {
+    
+    private final static GestorErrores instancia = new GestorErrores();
+    
+    private GestorErrores() {
     }
+    
+    public static GestorErrores obtenerInstancia() {
+        return instancia;
+    }
+
+	public void mostrarError(int codigo){
+		switch(codigo){
+		case 109:
+			System.err.println("Error al abrir el fichero.");
+			break;
+		case 110:
+			System.err.println("Error al leer el fichero.");
+			break;
+		case 111:
+			System.err.println("Error al escribir los tokens en tokens.txt.");
+			break;
+		case 112:
+			System.err.println("Error al escribir la tabla de símbolos en tablaSimbolos.txt.");
+			break;
+		}
+	}
 
     public void mostrarError(int codigo, int linea, char caracter, String lexema) {
 		switch (codigo) {
@@ -9,10 +32,10 @@ public class GestorErrores {
 			System.err.println("Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.");
 			break;
 		case 102:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera: \"" + lexema + "\".");
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera.");
 			break;
 		case 103:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal.");
+			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal: \"" + lexema + "\".");
 			break;
 		case 104:
 			System.err.println("Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.");
@@ -30,19 +53,21 @@ public class GestorErrores {
 			break;
 		case 108:
 			System.err.println("Error Léxico [Línea " + linea +
-								"]: Constante cadena demasiado larga (>64 caracteres): \"" + lexema + "\".");
+								"]: Constante cadena demasiado larga (>64 caracteres): " + lexema + ".");
 			break;
-		case 109:
-			System.err.println("Error al abrir el fichero.");
+		}
+	}
+
+	public void mostrarError(int codigo, int linea, String topePila, String tokenActual){
+		switch(codigo){
+		case 113:
+			System.err.println("Error sintáctico [Línea " + linea + "]: Se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'");
 			break;
-		case 110:
-			System.err.println("Error al leer el fichero.");
+		case 114:
+			System.err.println("Error sintáctico [Línea " + linea + "]: No hay regla para el no terminal '" + topePila + "' con el token actual '" + tokenActual + "'");
 			break;
-		case 111:
-			System.err.println("Error al escribir los tokens en tokens.txt.");
-			break;
-		case 112:
-			System.err.println("Error al escribir la tabla de símbolos en tablaSimbolos.txt.");
+		case 115:
+			System.err.println("Error sintáctico: Entrada no consumida después del análisis."); // ? Mejorar mensaje
 			break;
 		}
 	}

@@ -5,15 +5,8 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
-        String dirPrueba = "src/PIdG33.txt"; // dir/ficheroDePrueba.txt
+        String dirPrueba = "tx\\anexo\\AL-TS-27_10\\programa-fuente-valido-3.txt"; // dir/ficheroDePrueba.txt
         AnalizadorLexico lexico = new AnalizadorLexico(dirPrueba);
-        GestorErrores gestorErrores = new GestorErrores();
-
-        /*
-        TODO: Las tablas de simbolos son independientes de los analizadores
-        mapTablas = new HashMap<String, TablaSimbolos>();
-        empareja: etiqueta -> tablaSimbolos
-         */
 
         boolean fin = false;
 
@@ -23,28 +16,49 @@ public class Main {
 
                 if (par == null) {
                     System.err.println("Se detiene el análisis por error léxico previo.");
+                    // Siempre intentamos volcar la tabla actual antes de salir
+                    escribirTabla(lexico);
                     fin = true;
                 } else {
-                    Token tok = Token.fromEntry(par);
-                    out.write(tok.toString());
-                    out.flush();
+                    try {
+                        Token tok = Token.fromEntry(par);
+                        out.write(tok.toString());
+                        out.flush();
+                    } catch (IOException e) {
+                        // Error al escribir tokens.txt
+                        System.err.println("Error al escribir tokens: " + e.getMessage());
+                        GestorErrores.obtenerInstancia().mostrarError(111);
+                        // Intentar escribir la tabla aunque fallara tokens.txt
+                        escribirTabla(lexico);
+                        fin = true;
+                        break;
+                    }
+
+                    // Actualizamos el fichero de la tabla tras cada token para que exista si se corta la ejecución
+                    escribirTabla(lexico);
 
                     if ("EOF".equals(par.getKey())) {
+                        System.out.println("Lectura de fichero terminada.");
                         fin = true;
                     }
                 }
             }
-            try (BufferedWriter ts = new BufferedWriter(new FileWriter("tablaSimbolos.txt"))) {
-                ts.write(lexico.getTablaSimbolos().toString());
-            } catch (IOException e) {
-                System.err.println("Error al escribir la tabla de símbolos: " + e.getMessage());
-                gestorErrores.mostrarError(112, 0, ' ', null);
-            }
-
-            System.out.println("Lectura de fichero terminada.");
         } catch (IOException e) {
+            // Error al abrir/escribir tokens.txt (catch del try-with-resources)
             System.err.println("Error al escribir tokens: " + e.getMessage());
-            gestorErrores.mostrarError(111, 0, ' ', null);
+            GestorErrores.obtenerInstancia().mostrarError(111);
+            // Intentar escribir la tabla aunque el writer de tokens fallara
+            escribirTabla(lexico);
+        }
+    }
+
+    private static void escribirTabla(AnalizadorLexico lexico) {
+        try (BufferedWriter ts = new BufferedWriter(new FileWriter("tablaSimbolos.txt"))) {
+            ts.write(lexico.getTablaSimbolos().toString());
+            ts.flush();
+        } catch (IOException e) {
+            System.err.println("Error al escribir la tabla de símbolos: " + e.getMessage());
+            GestorErrores.obtenerInstancia().mostrarError(112);
         }
     }
 }
