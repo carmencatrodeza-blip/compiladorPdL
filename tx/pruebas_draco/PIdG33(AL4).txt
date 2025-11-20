@@ -1,0 +1,40 @@
+let int		x        ;
+let int		xx       ;
+let string	ss       ;
+let boolean	boolean_1;
+let boolean	boolean_2;
+let int		y        ;
+let string _321;
+write 4/5/77;
+_321="https://dssc.fi.upm.es/";
+function int f1 (int f1, boolean b1)
+{
+		read z;
+		b1 =  boolean_2;
+		xx = f1/x;
+		write//Alerta!
+
+		ss;
+		return xx;
+}
+
+
+
+function boolean f2 (int f22, boolean b1)
+{
+		let float f2; read f2;
+		write ((04/5/77/(88/f22)));write f2;
+		return boolean_1 && boolean_2 && b1;
+}
+
+x =
+  x / 6	
+    / z 
+    / 1
+    / (2
+    / y 
+    / 6)
+	;
+	
+
+write (f1 (x, f2 (3, boolean_2)));

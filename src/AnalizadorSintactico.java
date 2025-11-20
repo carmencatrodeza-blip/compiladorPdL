@@ -120,7 +120,7 @@ public class AnalizadorSintactico {
         reglasB.put("let", "7.let T id ;");
         reglasB.put("read", "4.S");
         reglasB.put("return", "4.S");
-        reglasB.put("while", "5.while ( E )");
+        reglasB.put("while", "5.while ( E ) { C }");
         reglasB.put("write", "4.S");
         reglasB.put("id", "4.S");
         tabla.put("B", reglasB);

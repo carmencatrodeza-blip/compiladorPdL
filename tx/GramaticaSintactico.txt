@@ -1,0 +1,54 @@
+Terminales = { { } while ( ) if ; let id read write return function void float string boolean int , && = == / entero real cadena lambda /= }
+NoTerminales = { P B S S1 F H T A K C E E1 R R1 U U1 V V1 X L Q }
+Axioma = P
+Producciones = {   
+P -> B P
+P -> F P
+P -> lambda
+B -> S
+B -> while ( E ) { C }
+B -> if ( E ) S 
+B -> let T id ;
+S -> id S1
+S -> write E ;
+S -> read id ;
+S -> return X ;
+S1 -> = E ;
+S1 -> /= E ;
+S1 -> ( L ) ;
+F -> function H id ( A ) { C }
+H -> T
+H -> void
+T -> boolean
+T -> float
+T -> string
+T -> int
+A -> T id K
+A -> void
+K -> , T id K
+K -> lambda
+C -> B C
+C -> lambda
+E -> R E1
+E1 -> && R E1
+E1 -> lambda 
+R -> U R1
+R1 -> == U R1
+R1 -> lambda
+U -> V U1
+U1 -> / V U1
+U1 -> lambda
+V -> id V1
+V -> ( E )
+V -> entero 
+V -> real
+V -> cadena 
+V1 -> ( L )
+V1 -> lambda
+X -> E
+X -> lambda
+L -> E Q
+L -> lambda
+Q -> , E Q
+Q -> lambda
+}

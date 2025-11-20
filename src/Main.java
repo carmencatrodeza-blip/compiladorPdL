@@ -20,8 +20,7 @@ public class Main {
         // Prueba del Analizador Sintáctico
         fr = abrirArchivo(dirPrueba);
         if (fr != null) {
-            AnalizadorLexico lexico = new AnalizadorLexico(fr);
-            AnalizadorSintactico sintactico = new AnalizadorSintactico(lexico);
+            AnalizadorSintactico sintactico = new AnalizadorSintactico(new AnalizadorLexico(fr));
             pruebaSintactico(sintactico);
             cerrarArchivo(fr);
         }

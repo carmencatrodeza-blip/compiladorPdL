@@ -1,0 +1,5 @@
+let int x  = "1";let int num  = 1;
+continue;
+output(num,n1);read{num};let uu float;
+call hola();
+

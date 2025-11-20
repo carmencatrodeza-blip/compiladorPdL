@@ -1,0 +1,50 @@
+let float llff11;
+
+let string	cadena;
+read 
+cadena;
+let boolean logico1	;
+let boolean logico2 	;
+let int int2			;
+
+
+
+// Ejemplo #2
+
+
+let string _321;
+write 4/5/77;
+_321="http://dlsiis.fi.upm.es/traductores/";
+int1 = 873;
+
+int2 = 378;
+if (logico1 && logico2) cadena = " hello!";
+
+function string ff(string sss)
+{
+	global = 33;
+	logico1 =  logico2;
+	return sss;
+	if (logico1) sss = ff (cadena);
+}
+		
+function 
+boolean 
+l
+(float l_)
+{
+return llff11==l_;
+}
+function  string funciOn (string logico2)
+{
+	let int var  ;
+  while (logico1){
+	logico1 = int1 == int2;write(0);logico2="";
+  }
+  return logico2;
+}
+
+
+write((cadena));
+cadena = ff(funciOn(cadena));
+logico1=(l(llff11));
