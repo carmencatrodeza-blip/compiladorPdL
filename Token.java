@@ -9,7 +9,6 @@ public class Token {
         this.valor = (valor == null) ? "" : valor;
     }
 
-    // Construcción directa desde SimpleEntry
     public static Token fromEntry(AbstractMap.SimpleEntry<String,Object> entry) {
         if (entry == null) {
             return new Token("ERROR", "");
@@ -22,6 +21,11 @@ public class Token {
         return "<" + tipo + ", " + valor + ">\n";
     }
 
-    public String getTipo() { return tipo; }
-    public Object getValor() { return valor; }
+    public String getTipo() {
+		return tipo; 
+	}
+
+    public Object getValor() {
+		return valor;
+	}
 }
