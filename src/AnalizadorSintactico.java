@@ -298,7 +298,7 @@ public class AnalizadorSintactico {
 
     private String obtenerLexemaReal(Object lexema, String token) {
         if ("id".equals(token) && lexema instanceof Integer) {
-            return lexico.getTablaSimbolos().getId((Integer)lexema); // nombre real
+            return lexico.getTablaSimbolos().getId((Integer)lexema);
         }  
         return (lexema != null) ? lexema.toString() : traducirTokenATerminal(token);
     }
