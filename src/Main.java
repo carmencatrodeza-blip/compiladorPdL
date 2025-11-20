@@ -7,6 +7,7 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
+        
         String dirPrueba = "src\\PIdG33.txt";
         
         // Prueba del Analizador Léxico
@@ -53,7 +54,7 @@ public class Main {
                 SimpleEntry<String, Object> par = lexico.sigToken();
 
                 if (par == null) {
-                    System.err.println("Se detiene el análisis por error léxico previo.");
+                    System.err.println("\033[31mSe detiene el análisis por error léxico previo.\033[0m");
                     escribirTabla(lexico);
                     fin = true;
                 } else {
@@ -69,7 +70,7 @@ public class Main {
                     escribirTabla(lexico);
 
                     if ("EOF".equals(par.getKey())) {
-                        System.out.println("Lectura de fichero terminada.");
+                        System.out.println("\033[32mLectura de fichero terminada.\033[0m");
                         fin = true;
                     }
                 }
@@ -86,7 +87,7 @@ public class Main {
         try (BufferedWriter out = new BufferedWriter(new FileWriter("parse.txt"))) {
             out.write("descendente " + resultadoParse);
             out.flush();
-            System.out.println("Parse completado. Resultado guardado en parse.txt");
+            System.out.println("\033[32mParse completado. Resultado guardado en parse.txt.\033[0m");
         } catch (IOException e) {
             GestorErrores.obtenerInstancia().mostrarError(5);
         }

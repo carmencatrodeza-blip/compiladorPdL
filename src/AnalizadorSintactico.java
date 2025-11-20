@@ -56,7 +56,7 @@ public class AnalizadorSintactico {
         }
 
         if (tokenActual.equals("$")) {
-            System.out.println("Análisis sintáctico completado con éxito.");
+            System.out.println("\033[32mAnálisis sintáctico completado con éxito.\033[0m");
             return parse.substring(0, parse.length()-1); // Eliminar el espacio final.
         } else {
             GestorErrores.obtenerInstancia().mostrarError(203, lexico.getLinea(), "$", tokenActual);
@@ -71,6 +71,7 @@ public class AnalizadorSintactico {
         pila.push("P"); // Símbolo de inicio
     }
 
+    // Inicializa el conjunto de terminales del lenguaje.
     private void inicializarSetTerminales() {
         terminales = Set.of(
             "function", "if", "let", "read", "return", "while", "write", "id",
@@ -79,6 +80,7 @@ public class AnalizadorSintactico {
         );
     }
 
+    // Inicializa el mapa que traduce los nombres de los tokens a los nombres de los terminales usados en la tabla.
     private void inicializarMapaNombres() {
         nombresTerminales = new HashMap<>();
         nombresTerminales.put("asigDiv", "/=");
@@ -95,6 +97,7 @@ public class AnalizadorSintactico {
         nombresTerminales.put("EOF", "$");
     }
 
+    // Traduce el nombre del token al nombre del terminal usado en la tabla.
     private String traducirTokenATerminal(String token) {
         return nombresTerminales.containsKey(token) ? nombresTerminales.get(token) : token;
 }

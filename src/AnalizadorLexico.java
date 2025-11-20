@@ -152,7 +152,6 @@ public class AnalizadorLexico {
 				}
 				else{
 					GestorErrores.obtenerInstancia().mostrarError(101, linea, (char)caracter, null);
-					System.err.println("DEBUG: Carácter ASCII = " + caracter + " (0x" + Integer.toHexString(caracter) + ")");
 					return null;
 				}
 				break;

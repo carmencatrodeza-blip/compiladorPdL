@@ -1,6 +1,9 @@
 public class GestorErrores {
     
     private final static GestorErrores instancia = new GestorErrores();
+	private static final String ROJO = "\033[31m";
+	private static final String BLANCO = "\033[0m";
+	private static String output;
     
     private GestorErrores() {
     }
@@ -10,71 +13,80 @@ public class GestorErrores {
     }
 
 	public void mostrarError(int codigo){
+		output += ROJO;
 		switch(codigo){
 		case 1:
-			System.err.println("Error al abrir el fichero.");
+			output += "Error al abrir el fichero.";
 			break;
 		case 2:
-			System.err.println("Error al leer el fichero.");
+			output += "Error al leer el fichero.";
 			break;
 		case 3:
-			System.err.println("Error al escribir los tokens en tokens.txt.");
+			output += "Error al escribir los tokens en tokens.txt.";
 			break;
 		case 4:
-			System.err.println("Error al escribir la tabla de símbolos en tablaSimbolos.txt.");
+			output += "Error al escribir la tabla de símbolos en tablaSimbolos.txt.";
 			break;
 		case 5:
-			System.err.println("Error al escribir el parse en parse.txt.");
+			output += "Error al escribir el parse en parse.txt.";
 			break;
 		case 6:
-			System.err.println("Error al cerrar el fichero.");
+			output += "Error al cerrar el fichero.";
 			break;
 		}
+		output += BLANCO;
+		System.err.println(output);
 	}
 
     public void mostrarError(int codigo, int linea, char caracter, String lexema) {
+		output += ROJO;
 		switch (codigo) {
 		case 101:
-			System.err.println("Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.");
+			output += "Error Léxico [Línea " + linea + "]: Caracter " + caracter + " no reconocido.";
 			break;
 		case 102:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte entera.");
+			output += "Error Léxico [Línea " + linea + "]: Constante real sin parte entera.";
 			break;
 		case 103:
-			System.err.println("Error Léxico [Línea " + linea + "]: Constante real sin parte decimal: \"" + lexema + "\".");
+			output += "Error Léxico [Línea " + linea + "]: Constante real sin parte decimal: \"" + lexema + "\".";
 			break;
 		case 104:
-			System.err.println("Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.");
+			output += "Error Léxico [Línea " + linea + "]: Sentencia de escape formada sin estar creando una cadena.";
 			break;
 		case 105:
-			System.err.println("Error Léxico [Línea " + linea + "]: Operador & no seguido de otro &.");
+			output += "Error Léxico [Línea " + linea + "]: Operador & no seguido de otro &.";
 			break;
 		case 106:
-			System.err.println("Error Léxico [Línea " + linea +
-								"]: Constante entera fuera de rango (>32767): \"" + lexema + "\".");
+			output += "Error Léxico [Línea " + linea +
+								"]: Constante entera fuera de rango (>32767): \"" + lexema + "\".";
 			break;
 		case 107:
-			System.err.println("Error Léxico [Línea " + linea +
-								"]: Constante real fuera de rango (>117549436.0): \"" + lexema + "\".");
+			output += "Error Léxico [Línea " + linea +
+								"]: Constante real fuera de rango (>117549436.0): \"" + lexema + "\".";
 			break;
 		case 108:
-			System.err.println("Error Léxico [Línea " + linea +
-								"]: Constante cadena demasiado larga (>64 caracteres): " + lexema + ".");
+			output += "Error Léxico [Línea " + linea +
+								"]: Constante cadena demasiado larga (>64 caracteres): " + lexema + ".";
 			break;
 		}
+		output += BLANCO;
+		System.err.println(output);
 	}
 
 	public void mostrarError(int codigo, int linea, String topePila, String tokenActual){
+		output += ROJO;
 		switch(codigo){
 		case 201:
-			System.err.println("Error sintáctico [Línea " + linea + "]: Se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'");
+			output += "Error sintáctico [Línea " + linea + "]: Se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'";
 			break;
 		case 202:
-			System.err.println("Error sintáctico [Línea " + linea + "]: No hay regla para el no terminal '" + topePila + "' con el token actual '" + tokenActual + "'");
+			output += "Error sintáctico [Línea " + linea + "]: No hay regla para el no terminal '" + topePila + "' con el token actual '" + tokenActual + "'";
 			break;
 		case 203:
-			System.err.println("Error sintáctico: Entrada no consumida después del análisis."); // ? Mejorar mensaje
+			output += "Error sintáctico: Entrada no consumida después del análisis."; // ? Mejorar mensaje
 			break;
 		}
+		output += BLANCO;
+		System.err.println(output);
 	}
 }
