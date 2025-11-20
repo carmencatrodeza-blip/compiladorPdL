@@ -10,6 +10,10 @@ public class AnalizadorSintactico {
     private HashMap<String, HashMap<String, String>> tabla; // No terminal -> (Terminal -> Regla)
     private Set<String> terminales;
     private Map<String, String> nombresTerminales; // nombre token -> nombre terminal
+    private String parse;
+    private String tokenActual;
+    private String lexemaActual;
+    private String lexemaAnterior;
 
     public AnalizadorSintactico(AnalizadorLexico lexico) {
         this.lexico = lexico;
@@ -20,8 +24,8 @@ public class AnalizadorSintactico {
     }
 
     public String parse(){
-        String parse = "";
-        String tokenActual = traducirTokenATerminal(lexico.sigToken().getKey());
+        parse = "";
+        tokenActual = leerSiguienteToken();
         
         while (!pila.isEmpty()) {
             String topePila = pila.peek();
@@ -29,9 +33,10 @@ public class AnalizadorSintactico {
             if (terminales.contains(topePila)) {
                 if (topePila.equals(tokenActual)) {
                     pila.pop();
-                    tokenActual = traducirTokenATerminal(lexico.sigToken().getKey());
+                    lexemaAnterior = lexemaActual;
+                    tokenActual = leerSiguienteToken();
                 } else {
-                    GestorErrores.obtenerInstancia().mostrarError(201, lexico.getLinea(), topePila, tokenActual);
+                    GestorErrores.obtenerInstancia().mostrarError(201, lexico.getLinea(), topePila, tokenActual, lexemaAnterior, null);
                     return "0";
                 }
             } else {
@@ -49,7 +54,12 @@ public class AnalizadorSintactico {
                         }
                     }
                 } else {
-                    GestorErrores.obtenerInstancia().mostrarError(202, lexico.getLinea(), topePila, tokenActual);
+                    // No hay regla para el no terminal con el token actual
+                    Map<String,String> posibles = tabla.get(topePila);
+                    String esperados = "";
+                    for (String s : posibles.keySet()) esperados += "'" + s + "', ";
+                    esperados = esperados.substring(0, esperados.length()-2); // Quitar la última coma y espacio
+                    GestorErrores.obtenerInstancia().mostrarError(202, lexico.getLinea(), topePila, tokenActual, lexemaAnterior, esperados);
                     return "0";
                 }
             }
@@ -59,7 +69,7 @@ public class AnalizadorSintactico {
             System.out.println("\033[32mAnálisis sintáctico completado con éxito.\033[0m");
             return parse.substring(0, parse.length()-1); // Eliminar el espacio final.
         } else {
-            GestorErrores.obtenerInstancia().mostrarError(203, lexico.getLinea(), "$", tokenActual);
+            GestorErrores.obtenerInstancia().mostrarError(201, lexico.getLinea(), "$", tokenActual, lexemaAnterior, null);
             return "0";
         }
     }
@@ -100,7 +110,7 @@ public class AnalizadorSintactico {
     // Traduce el nombre del token al nombre del terminal usado en la tabla.
     private String traducirTokenATerminal(String token) {
         return nombresTerminales.containsKey(token) ? nombresTerminales.get(token) : token;
-}
+    }
 
     // Inicializa la tabla descendente de análisis sintáctico. Guarda los precedentes de las reglas ya que es lo único que se usará.
     private void inicializarTabla() {
@@ -273,4 +283,25 @@ public class AnalizadorSintactico {
         reglasQ.put(",", "48., E Q");
         tabla.put("Q", reglasQ);
     }
+
+    private String leerSiguienteToken() {
+        Map.Entry<String,Object> t = lexico.sigToken();
+        String nombreToken = t.getKey();
+        Object lexema = t.getValue();
+        String terminal = traducirTokenATerminal(nombreToken);
+        // Guardar la palabra real leída o el símbolo terminal si no hay lexema
+        // si es un id, guardar su lexema (nombre real)
+        lexemaActual = obtenerLexemaReal(lexema, nombreToken);
+
+        return terminal;
+    }
+
+    private String obtenerLexemaReal(Object lexema, String token) {
+        if ("id".equals(token) && lexema instanceof Integer) {
+            return lexico.getTablaSimbolos().getId((Integer)lexema); // nombre real
+        }  
+        return (lexema != null) ? lexema.toString() : traducirTokenATerminal(token);
+    }
+
+
 }

@@ -89,6 +89,16 @@ public class TablaSimbolos {
         return tabla.get(id); 
     }
 
+    // Devuelve el id asociado a una posición dada (recibe un String y no un int debiado a como se usa en AnalizadorSintactico)
+    public String getId (int pos){
+        for(Map.Entry<String,Simbolo> entry : tabla.entrySet()){
+            if(entry.getValue().getPos() == pos){
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     private int updateSumDesplazamiento(String tipo) {
         int incremento = 0;
         switch (tipo) {

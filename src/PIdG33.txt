@@ -1,1 +1,1 @@
-let int a ;
+function int f(int lamama , ) { }
