@@ -1,7 +1,8 @@
 Terminales = { { } while ( ) if ; let id read write return function void float string boolean int , && = == / entero real cadena lambda /= }
-NoTerminales = { P B S S1 F H T A K C E E1 R R1 U U1 V V1 X L Q }
-Axioma = P
+NoTerminales = { P1 P B S S1 F H T A K C E E1 R R1 U U1 V V1 X L Q }
+Axioma = P1
 Producciones = {   
+P1 -> P
 P -> B P
 P -> F P
 P -> lambda

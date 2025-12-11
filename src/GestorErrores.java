@@ -77,10 +77,10 @@ public class GestorErrores {
 		output += ROJO + "Error Sintáctico [Línea " + linea + "]: tras '" + ultimoLexema + "' ";
 		switch(codigo){
 		case 201:
-			output += "se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'";
+			output += "se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'.";
 			break;
 		case 202:
-			output += "se esperaba uno de los siguientes tokens: " + posibles + ", pero se encontró '" + tokenActual + "'";
+			output += "se esperaba uno de los siguientes: " + posibles + ", pero se encontró '" + tokenActual + "'.";
 			break;
 		}
 		output += BLANCO;

@@ -1,0 +1,51 @@
+Edt
+P1 -> {TSG:= CrearTabla(); desplG:= 1} P {LiberarTabla(TSG)}
+P -> B P
+P -> F P
+P -> λ
+B -> S
+B -> while ( E ) { C }
+B -> if (E) S 
+B -> {zona_decl:= true} let T id {AñadirTipo(id.pos, T.tipo) if TSL = null then {AñadirDespl(id.pos,despG); despG := despG+T.tamaño} else {AñadirDespl(id.pos, despL); despL := despL+T.tamaño} zona_decl:= false}  ;
+S -> id S1
+S -> write E ;
+S -> read id ;
+S -> return X ;
+S1 -> = E ;
+S1 -> /= E ;
+S1 -> ( L ) ;
+F -> function {zona_decl:= true} H id {TSL:= CrearTabla(); desplL:= -1} ( A {zona_decl:= false} ) { C } {LiberarTabla(TSL)}
+H -> T {H.tipo = T.tipo}
+H -> void {H.tipo = void}
+T -> boolean {T.tipo = logico; T.ancho = 4}
+T -> float {T.tipo = real; T.ancho = 8}
+T -> string {T.tipo = cadena; T.ancho = 128}
+T -> int {T.tipo = entero; T.ancho = 4}
+A -> T id K
+A -> void {A.tipo = void}
+K -> , T id K
+K -> λ
+C -> B C
+C -> λ
+E -> R E1
+E1 -> && R E1
+E1 -> λ
+R -> U R1
+R1 -> == U R1
+R1 -> λ
+U -> V U1
+U1 -> / V U1
+U1 -> λ
+V -> id V1
+V -> ( E )
+V -> entero 
+V -> real
+V -> cadena 
+V1 -> ( L )
+V1 -> λ
+X -> E
+X -> λ
+L -> E Q
+L -> λ
+Q -> , E Q
+Q -> λ
