@@ -319,6 +319,5 @@ public class AnalizadorSintactico {
         }  
         return (lexema != null) ? lexema.toString() : traducirTokenATerminal(token);
     }
-
-
+    
 }

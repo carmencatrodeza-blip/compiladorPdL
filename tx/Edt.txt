@@ -1,51 +1,282 @@
-Edt
 P1 -> {TSG:= CrearTabla(); desplG:= 1} P {LiberarTabla(TSG)}
-P -> B P
-P -> F P
-P -> λ
-B -> S
-B -> while ( E ) { C }
-B -> if (E) S 
-B -> {zona_decl:= true} let T id {AñadirTipo(id.pos, T.tipo) if TSL = null then {AñadirDespl(id.pos,despG); despG := despG+T.tamaño} else {AñadirDespl(id.pos, despL); despL := despL+T.tamaño} zona_decl:= false}  ;
-S -> id S1
-S -> write E ;
-S -> read id ;
-S -> return X ;
-S1 -> = E ;
-S1 -> /= E ;
-S1 -> ( L ) ;
-F -> function {zona_decl:= true} H id {TSL:= CrearTabla(); desplL:= -1} ( A {zona_decl:= false} ) { C } {LiberarTabla(TSL)}
+P -> B P {P.tipo:=if(B.tipoRet!=vacio) then tipo_error else if(Pa.tipo=vacio) then B.tipo else if(B.tipo=Pa.tipo=tipo_ok) then B.tipo else tipo_error}
+P -> F P {P.tipo:=if(Pa.tipo=vacio) then F.tipo else if(F.tipo=Pa.tipo=tipo_ok) then F.tipo else tipo_error}
+P -> λ {P.tipo := vacio}
+B -> S {B.tipo:=S.tipo; B.tipoRet:=S.tipoRet}
+B -> while ( E ) { C {B.tipo:= if(E.tipo=logico AND C.tipo=tipo_ok) then tipo_ok else tipo_error; B.tipoRet:=C.tipoRet} }
+B -> if ( E ) S  {B.tipo:= if (E.tipo=logico AND S.tipo=tipo_ok AND S.tipoRet=vacio) then tipo_ok else tipo_error}
+B -> let {zona_declaracion:= true} T id {zona_declaracion:=false; aniadirATS(id.pos, T.despl, T.tipo); B.tipo:=tipo_ok; accDespl()} ;
+S -> id S1 {S.tipo:=if (buscaTipo(id.pos) = S1.tipo) then tipo_ok else if (buscarTipo(id.pos) = function AND getParam(id.pos)=S1.tipo) then buscarTipoRet(id.pos) else if(buscaTipo(id.pos)=null AND S1.tipo = entero) then {tipo_ok; aniadirATS(id, S1.tipo, despG+S1.despl)} else tipo_error; S.tipoRet:= vacio}
+S -> write E {S.tipo:=if(E.tipo={cad,entero,real}) then tipo_ok else tipo_error; S.tipoRet:=vacio} ;
+S -> read id {S.tipo:=if(id.buscarTipo(id.pos)=cadena OR id.buscarTipo(id.pos)=entero OR id.buscarTipo(id.pos)=real) then tipo_ok else tipo_error; S.tipoRet:=vacio} ;
+S -> return X {S.tipo:=tipo_ok; S.tipoRet:=X.tipo} ;
+S1 -> = E {S1.tipo = E.tipo} ;
+S1 -> /= E {S1.tipo = if(E.tipo={entero,real}) E.tipo else tipo_error} ;
+S1 -> ( L {S1.tipo = L.tipo} ) ;
+F -> function {zona_declaracion:= true} H id {TSL:= CrearTabla(); desplL:= -1} ( A {zona_declaracion:= false} ) { C {F.tipo:=if(C.tipo=tipo_ok AND C.tipoRet=H.tipo) then tipo_ok else tipo_error; añadirFunATS(id.pos, 0, H.tipo, A.tipo, etiq); liberarTS()} } {LiberarTabla(TSL)}
 H -> T {H.tipo = T.tipo}
 H -> void {H.tipo = void}
 T -> boolean {T.tipo = logico; T.ancho = 4}
 T -> float {T.tipo = real; T.ancho = 8}
 T -> string {T.tipo = cadena; T.ancho = 128}
 T -> int {T.tipo = entero; T.ancho = 4}
-A -> T id K
+A -> T id K {A.tipo:=if(K.tipo=vacio) then T.tipo else T.tipo x K.tipo}
 A -> void {A.tipo = void}
-K -> , T id K
-K -> λ
-C -> B C
-C -> λ
-E -> R E1
-E1 -> && R E1
-E1 -> λ
-R -> U R1
-R1 -> == U R1
-R1 -> λ
-U -> V U1
-U1 -> / V U1
-U1 -> λ
-V -> id V1
-V -> ( E )
-V -> entero 
-V -> real
-V -> cadena 
-V1 -> ( L )
-V1 -> λ
-X -> E
-X -> λ
-L -> E Q
-L -> λ
-Q -> , E Q
-Q -> λ
+K -> , T id K {K.tipo:=if(Ka.tipo=vacio) then T.tipo else T.tipo x Ka.tipo}
+K -> λ {K.tipo:=vacio}
+C -> B C {C.tipo:=if(Ca.tipo=vacio) then B.tipo else if(B.tipo!=tipo_error AND Ca.tipo=tipo_ok) then tipo_ok else tipo_error; C.tipoRet:=if(B.tipoRet = vacio) then Ca.tipoRet else B.tipoRet}
+C -> λ {C.tipo:=tipo_vacio}
+E -> R E1 {E.tipo:=if(E1.tipo= vacio) then R.tipo else if(R.tipo=E1.tipo=logico) then R.tipo else tipo_error}
+E1 -> && R E1 {E1.tipo:=if(E1a.tipo=vacio) then R.tipo else if(R.tipo=E1a.tipo={ent, real, logico}) then R.tipo else tipo_error}
+E1 -> λ {E1.tipo:=vacio}
+R -> U R1 {R.tipo:=if(R1.tipo=vacio) then U.tipo else if(U.tipo=R1.tipo={real, entero, logico}) then U.tipo else tipo_error}
+R1 -> == U R1 {R1.tipo:=if(R1a.tipo=vacio) then U.tipo else if(U.tipo=R1.tipo={real, entero, logico}) then logico else tipo_error}
+R1 -> λ {R1.tipo:=vacio}
+U -> V U1 {U.tipo:=if(U1.tipo=vacio) then V.tipo else if(V.tipo=U1.tipo={real, entero}) then V.tipo else tipo_error}
+U1 -> / V U1 {U1.tipo:=if(U1a.tipo=vacio) then V.tipo else if(V.tipo=U.tipo={entero, real}) then V.tipo else tipo_error}
+U1 -> λ {U1.tipo:=vacio}
+V -> id V1 {V.tipo:=if(V1.tipo=vacio) then buscarTipo(id.pos) else if(buscarTipo(id.pos)=function AND getParams(id.pos)=V1.tipo) then retTipo(id.pos) else tipo_error}
+V -> ( E {V.tipo:=E.tipo} )
+V -> entero {V.tipo:=entero}
+V -> real {V.tipo:=real}
+V -> cadena {V.tipo:=cadena}
+V1 -> ( L {V.tipo:=L.tipo} )
+V1 -> λ {V.tipo:=vacio}
+X -> E {X.tipo:=E.tipo}
+X -> λ {X.tipo:=vacio}
+L -> E Q {L.tipo:=if(Q.tipo=vacio)then E.tipo else E.tipo x Q.tipo}
+L -> λ {L.tipo:=vacio}
+Q -> , E Q {Q.tipo:=if(Qa.tipo=vacio)then E.tipo else E.tipo x Qa.tipo}
+Q -> λ {L.tipo:=vacio}
+
+No se usa el estándar utilizado en clase (si la regla es P -> B P {P.tipo = P1.tipo}) ya que usamos reglas llamadas P y P1
+al factorizar la gramática, por lo que para los métodos del EdT utilizamos letras en vez de números:
+P -> B P {P.tipo = Pa.tipo}
+
+VARIABLES:
+id.pos -> pos si estamos en tabla global, negativo si en tabla local y 0 si no está
+desplL -> desplazamiento local, empieza en -1 y decrece
+desplG -> desplazamiento global, empieza en 1 y crece
+zona_declaracion -> boolean zona de declaración
+tablaAct -> tabla de simbolos actual
+tablaLocal -> tabla de simbolos local
+tablaGlobal -> tabla de simbolos global
+
+ATRIBUTOS:
+id.pos
+.tipo: E, S, 
+T.despl
+
+MÉTODOS:
+crearTabla() -> tablaAct = new tablaLocal;
+liberarTS() -> tablaAct == tablaLocal ? tablaLocal = null, tablaAct=tablaGlobal : tablaGlobal = null = tablaAct;
+aniadirATS(id.pos, T.despl, T.tipo) -> tablaAct.add(parametros)
+accDespl() -> if TSL = null then {AñadeDespl(id.pos,despG); despG := despG+T.tamaño} else {AñadeDespl(id.pos, despL); despL := despL-T.tamaño}
+Otra forma: tablaAct == tablaGlobal ? desplGlobal++ : desplLocal-- ;
+añadirFunATS(id.pos, 0, H.tipo, A.tipo, etiq);
+
+VERSION CON CLARA
+
+P1 -> {TSG:= CrearTabla(); desplG:= 1} P {LiberarTabla(TSG)}
+P -> B P {P.tipo:=if(B.tipoRet!=vacio) then tipo_error else if(Pa.tipo=vacio) then B.tipo else if(B.tipo=Pa.tipo=tipo_ok) then B.tipo else tipo_error}
+P -> F P {P.tipo:=if(Pa.tipo=vacio) then F.tipo else if(F.tipo=Pa.tipo=tipo_ok) then F.tipo else tipo_error}
+P -> λ {P.tipo := vacio}
+B -> S {B.tipo:=S.tipo; B.tipoRet:=S.tipoRet}
+B -> while ( E ) { C {B.tipo:= if(E.tipo=logico AND C.tipo=tipo_ok) then tipo_ok else tipo_error; B.tipoRet:=C.tipoRet} }
+B -> if ( E ) S  {B.tipo:= if (E.tipo=logico AND S.tipo=tipo_ok AND S.tipoRet=vacio) then tipo_ok else tipo_error}
+B -> let {zona_declaracion:= true} T id {zona_declaracion:=false; aniadirATS(id.pos, T.despl, T.tipo); B.tipo:=tipo_ok; accDespl()} ;
+S -> id S1 {S.tipo:=if (buscaTipo(id.pos) = S1.tipo) then tipo_ok else if (buscarTipo(id.pos) = function AND getParam(id.pos)=S1.tipo) then buscarTipoRet(id.pos) else if(buscaTipo(id.pos)=null AND S1.tipo = entero) then {tipo_ok; aniadirATS(id, S1.tipo, despG+S1.despl)} else tipo_error; S.tipoRet:= vacio}
+S -> write E {S.tipo:=if(E.tipo={cad,entero,real}) then tipo_ok else tipo_error; S.tipoRet:=vacio} ;
+S -> read id {S.tipo:=if(id.buscarTipo(id.pos)=cadena OR id.buscarTipo(id.pos)=entero OR id.buscarTipo(id.pos)=real) then tipo_ok else tipo_error; S.tipoRet:=vacio} ;
+S -> return X {S.tipo:=tipo_ok; S.tipoRet:=X.tipo} ;
+S1 -> = E {S1.tipo = E.tipo} ;
+S1 -> /= E {S1.tipo = if(E.tipo={entero,real}) E.tipo else tipo_error} ;
+S1 -> ( L {S1.tipo = L.tipo} ) ;
+F -> function {zona_declaracion:= true} H id {TSL:= CrearTabla(); desplL:= -1} ( A {zona_declaracion:= false} ) { C {F.tipo:=if(C.tipo=tipo_ok AND C.tipoRet=H.tipo) then tipo_ok else tipo_error; añadirFunATS(id.pos, 0, H.tipo, A.tipo, etiq); liberarTS()} } {LiberarTabla(TSL)}
+H -> T {H.tipo = T.tipo}
+H -> void {H.tipo = void}
+T -> boolean {T.tipo = logico; T.ancho = 4}
+T -> float {T.tipo = real; T.ancho = 8}
+T -> string {T.tipo = cadena; T.ancho = 128}
+T -> int {T.tipo = entero; T.ancho = 4}
+A -> T id K {A.tipo:=if(K.tipo=vacio) then T.tipo else T.tipo x K.tipo}
+A -> void {A.tipo = void}
+K -> , T id K {K.tipo:=if(Ka.tipo=vacio) then T.tipo else T.tipo x Ka.tipo}
+K -> λ {K.tipo:=vacio}
+C -> B C {C.tipo:=if(Ca.tipo=vacio) then B.tipo else if(B.tipo!=tipo_error AND Ca.tipo=tipo_ok) then tipo_ok else tipo_error; C.tipoRet:=if(B.tipoRet = vacio) then Ca.tipoRet else B.tipoRet}
+C -> λ {C.tipo:=tipo_vacio}
+E -> R E1 {E.tipo:=if(E1.tipo= vacio) then R.tipo else if(R.tipo=E1.tipo=logico) then R.tipo else tipo_error}
+E1 -> && R E1 {E1.tipo:=if(E1a.tipo=vacio) then R.tipo else if(R.tipo=E1a.tipo={ent, real, logico}) then R.tipo else tipo_error}
+E1 -> λ {E1.tipo:=vacio}
+R -> U R1 {R.tipo:=if(R1.tipo=vacio) then U.tipo else if(U.tipo=R1.tipo={real, entero, logico}) then U.tipo else tipo_error}
+R1 -> == U R1 {R1.tipo:=if(R1a.tipo=vacio) then U.tipo else if(U.tipo=R1a.tipo={real, entero, logico}) then logico else tipo_error}
+R1 -> λ {R1.tipo:=vacio}
+U -> V U1 {U.tipo:=if(U1.tipo=vacio) then V.tipo else if(V.tipo=U1.tipo={real, entero}) then V.tipo else tipo_error}
+U1 -> / V U1 {U1.tipo:=if(U1a.tipo=vacio) then V.tipo else if(V.tipo=U1a.tipo={entero, real}) then V.tipo else tipo_error}
+U1 -> λ {U1.tipo:=vacio}
+V -> id V1 {V.tipo:=if(V1.tipo=vacio) then buscarTipo(id.pos) else if(buscarTipo(id.pos)=function AND getParams(id.pos)=V1.tipo) then retTipo(id.pos) else tipo_error}
+V -> ( E {V.tipo:=E.tipo} )
+V -> entero {V.tipo:=entero}
+V -> real {V.tipo:=real}
+V -> cadena {V.tipo:=cadena}
+V1 -> ( L {V.tipo:=L.tipo} )
+V1 -> λ {V.tipo:=vacio}
+X -> E {X.tipo:=E.tipo}
+X -> λ {X.tipo:=vacio}
+L -> E Q {L.tipo:=if(Q.tipo=vacio)then E.tipo else E.tipo x Q.tipo}
+L -> λ {L.tipo:=vacio}
+Q -> , E Q {Q.tipo:=if(Qa.tipo=vacio)then E.tipo else E.tipo x Qa.tipo}
+Q -> λ {L.tipo:=vacio}
+
+INTENTO USANDO UN ATRIBUTO UNICO
+
+P1 -> {TSG:= CrearTabla(); desplG:= 1} P {LiberarTabla(TSG)}
+P -> B P {P.tipo := if (B.tipo = ret(T)) then tipo_error else if (Pa.tipo = vacio) then B.tipo else if (B.tipo = Pa.tipo = tipo_ok) then tipo_ok else tipo_error}
+P -> F P {P.tipo:=if(Pa.tipo=vacio) then F.tipo else if(F.tipo=Pa.tipo=tipo_ok) then F.tipo else tipo_error}
+P -> λ {P.tipo := vacio}
+B -> S {B.tipo:=S.tipo}
+B -> while ( E ) { C {B.tipo:= if(E.tipo=logico AND C.tipo!=tipo_error) then C.tipo else tipo_error} }
+B -> if ( E ) S  {B.tipo:= if (E.tipo=logico AND S.tipo=tipo_ok) then tipo_ok else tipo_error}
+B -> let {zona_declaracion:= true} T id {zona_declaracion:=false; aniadirATS(id.pos, T.despl, T.tipo); B.tipo:=tipo_ok; accDespl()} ;
+S -> id S1 {S.tipo:=if (buscaTipo(id.pos) = S1.tipo) then tipo_ok else if (buscarTipo(id.pos) = function AND getParam(id.pos)=S1.tipo) then tipo_ok else if(buscaTipo(id.pos)=null AND S1.tipo = entero) then {tipo_ok; aniadirATS(id, S1.tipo, despG+S1.despl)} else tipo_error}
+S -> write E {S.tipo:=if(E.tipo={cad,entero,real}) then tipo_ok else tipo_error} ;
+S -> read id {S.tipo := if(id.buscarTipo(id.pos)={cadena,entero,real}) then tipo_ok else tipo_error} ;
+S -> return X {S.tipo := ret(X.tipo)} ;
+S1 -> = E {S1.tipo = E.tipo} ;
+S1 -> /= E {S1.tipo = if(E.tipo={entero,real}) E.tipo else tipo_error} ;
+S1 -> ( L {S1.tipo = L.tipo} ) ;
+F -> function {zona_declaracion:= true} H id {TSL:= CrearTabla(); desplL:= -1} ( A {zona_declaracion:= false} ) { C {if (C.tipo = ret(H.tipo)) then tipo_ok else if (H.tipo = void AND C.tipo = {vacio, tipo_ok}) then tipo_ok else tipo_error; añadirFunATS(id.pos, 0, H.tipo, A.tipo, etiq)} } {LiberarTabla(TSL)}
+H -> T {H.tipo = T.tipo}
+H -> void {H.tipo = void}
+T -> boolean {T.tipo = logico; T.ancho = 4}
+T -> float {T.tipo = real; T.ancho = 8}
+T -> string {T.tipo = cadena; T.ancho = 128}
+T -> int {T.tipo = entero; T.ancho = 4}
+A -> T id K {A.tipo:=if(K.tipo=vacio) then T.tipo else T.tipo x K.tipo}
+A -> void {A.tipo = void}
+K -> , T id K {K.tipo:=if(Ka.tipo=vacio) then T.tipo else T.tipo x Ka.tipo}
+K -> λ {K.tipo:=vacio}
+C -> B C {C.tipo := if (B.tipo = tipo_error OR Ca.tipo = tipo_error) then tipo_error else if (B.tipo = ret(T)) then ret(T) else if (Ca.tipo = vacio) then B.tipo else Ca.tipo}
+C -> λ {C.tipo:=vacio}
+E -> R E1 {E.tipo:=if(E1.tipo= vacio) then R.tipo else if(R.tipo=E1.tipo=logico) then logico else tipo_error}
+E1 -> && R E1 {E1.tipo:=if(E1a.tipo=vacio) then R.tipo else if(R.tipo=E1a.tipo={ent, real, logico}) then R.tipo else tipo_error}
+E1 -> λ {E1.tipo:=vacio}
+R -> U R1 {R.tipo:=if(R1.tipo=vacio) then U.tipo else if(U.tipo=R1.tipo={real, entero, logico}) then U.tipo else tipo_error}
+R1 -> == U R1 {R1.tipo:=if(R1a.tipo=vacio) then U.tipo else if(U.tipo=R1a.tipo={real, entero, logico}) then logico else tipo_error}
+R1 -> λ {R1.tipo:=vacio}
+U -> V U1 {U.tipo:=if(U1.tipo=vacio) then V.tipo else if(V.tipo=U1.tipo={real, entero}) then V.tipo else tipo_error}
+U1 -> / V U1 {U1.tipo:=if(U1a.tipo=vacio) then V.tipo else if(V.tipo=U1a.tipo={entero, real}) then V.tipo else tipo_error}
+U1 -> λ {U1.tipo:=vacio}
+V -> id V1 {V.tipo:=if(V1.tipo=vacio) then buscarTipo(id.pos) else if(buscarTipo(id.pos)=function AND getParams(id.pos)=V1.tipo) then retTipo(id.pos) else tipo_error}
+V -> ( E {V.tipo:=E.tipo} )
+V -> entero {V.tipo:=entero}
+V -> real {V.tipo:=real}
+V -> cadena {V.tipo:=cadena}
+V1 -> ( L {V.tipo:=L.tipo} )
+V1 -> λ {V.tipo:=vacio}
+X -> E {X.tipo:=E.tipo}
+X -> λ {X.tipo:=vacio}
+L -> E Q {L.tipo:=if(Q.tipo=vacio)then E.tipo else E.tipo x Q.tipo}
+L -> λ {L.tipo:=vacio}
+Q -> , E Q {Q.tipo:=if(Qa.tipo=vacio)then E.tipo else E.tipo x Qa.tipo}
+Q -> λ {L.tipo:=vacio}
+
+TRADUCCION A TERMINOS DE PILA
+
+1.  {Pop(1)}
+2.  {Pop(2)}
+3.  {Pop(3)}
+4.  {Pop(4)}
+5.  {Pop(5)}
+6.  {zona_declaracion = false}
+7.  {Pop(7)}
+8.  {zona_declaracion = true}
+9.  {Pop(9)}
+10. {TSG:= CrearTabla(); desplG:= 1 ; etiq = "global"}
+11. {TSL:= CrearTabla(); desplL:= -1 ; etiq = buscarId(AUX[tope].pos)}
+12. {LiberarTabla(TSL)}
+13. {AUX[tope-1].tipo := if(AUX[tope].tipo=tipo_ok) then tipo_ok else tipo_error ; LiberarTabla(TSG)}
+14. {AUX[tope-2].tipo := if (AUX[tope-1].tipo = ret({logico,entero,real,cadena})) then tipo_error else if (AUX[tope].tipo = vacio) then AUX[tope-1].tipo else if (AUX[tope-1].tipo = AUX[tope].tipo = tipo_ok) then tipo_ok else tipo_error}
+15. {AUX[tope-2].tipo := if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo=tipo_ok) then tipo_ok else tipo_error}
+16. {AUX[tope].tipo=vacio}
+17. {AUX[tope-1].tipo:=AUX[tope].tipo}
+18. {AUX[tope-2].tipo:=AUX[tope].tipo}
+19. {AUX[tope-1].tipo := ret(AUX[tope].tipo)}
+20. {AUX[tope-1].tipo:=logico}
+21. {AUX[tope-1].tipo:=entero}
+22. {AUX[tope-1].tipo:=real}
+23. {AUX[tope-1].tipo:=cadena}
+24. {AUX[tope-1].tipo:=void}
+25. {AUX[tope-6].tipo:= if(AUX[tope-3].tipo=logico AND AUX[tope].tipo!=tipo_error) then AUX[tope].tipo else tipo_error}
+26. {AUX[tope-5].tipo:= if (AUX[tope-2].tipo=logico AND AUX[tope].tipo=tipo_ok) then tipo_ok else tipo_error}
+27. {aniadirATS(AUX[tope].pos, AUX[tope-1].despl, AUX[tope-1].tipo); AUX[tope-3].tipo:=tipo_ok; accDespl()}
+28. {AUX[tope-2].tipo := if(buscaTipo(AUX[tope-1].pos) = AUX[tope].tipo) then tipo_ok else if (buscarTipo(AUX[tope-1].pos) = function AND getParam(AUX[tope-1].pos)=AUX[tope].tipo) then tipo_ok else if(buscaTipo(AUX[tope-1].pos)=null AND AUX[tope].tipo = entero) then {tipo_ok; aniadirATS(AUX[tope-1], AUX[tope].tipo, despG+AUX[tope].despl)} else tipo_error}
+29. {AUX[tope-2].tipo := if(AUX[tope].tipo={cad,entero,real}) then AUX[tope].tipo else tipo_error}
+30. {AUX[tope-2].tipo := if(buscarTipo(AUX[tope].pos)={cadena,entero,real}) then tipo_ok else tipo_error}
+31. {AUX[tope-2].tipo := if(AUX[tope].tipo={entero,real}) AUX[tope].tipo else tipo_error}
+32. {AUX[tope-8].tipo := if (AUX[tope].tipo = ret(AUX[tope-6].tipo)) then tipo_ok else if (AUX[tope-6].tipo = void AND AUX[tope].tipo = {vacio, tipo_ok}) then tipo_ok else tipo_error; añadirFunATS(id.pos, 0, AUX[tope-6].tipo, AUX[tope-3].tipo, etiq)}
+33. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-2].tipo else AUX[tope-2].tipo x AUX[tope].tipo}
+34. {AUX[tope-4].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-2].tipo else AUX[tope-2].tipo x AUX[tope].tipo}
+35. {AUX[tope-2].tipo := if (AUX[tope-1].tipo = tipo_error OR AUX[tope].tipo = tipo_error) then tipo_error else if (AUX[tope-1].tipo = ret({logico,entero,real,cadena})) then AUX[tope-1].tipo else if (AUX[tope].tipo = vacio) then AUX[tope-1].tipo else AUX[tope].tipo}
+36. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo=logico) then logico else tipo_error}
+37. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={ent, real, logico}) then AUX[tope-1].tipo else tipo_error}
+38. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero, logico}) then AUX[tope-1].tipo else tipo_error}
+39. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero, logico}) then logico else tipo_error}
+40. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero}) then AUX[tope-1].tipo else tipo_error}
+41. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={entero, real}) then AUX[tope-1].tipo else tipo_error}
+42. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then buscarTipo(AUX[tope-1].pos) else if(buscarTipo(AUX[tope-1].pos)=function AND getParams(AUX[tope-1].pos)=AUX[tope].tipo) then retTipo(AUX[tope-1].pos) else tipo_error}
+43. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
+44. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
+
+EdT CON REGLAS TRADUCIDAS A PILA
+
+P1 -> {10} P {13} {1}
+P -> B P {14} {2}
+P -> F P {15} {2}
+P -> λ {16}
+B -> S {17} {1}
+B -> while ( E ) { C {25} } {7}
+B -> if ( E ) S  {26} {5}
+B -> let {8} T id {6} {27} ; {4}
+S -> id S1 {28} {2}
+S -> write E {29} ; {3} 
+S -> read id {30} ; {3} 
+S -> return X {19} ; {3} 
+S1 -> = E {18} ; {3} 
+S1 -> /= E {29} ; {3} 
+S1 -> ( L {18} ) ; {4}
+F -> function {8} H id {11} ( A {6} ) { C {32} {12} } {9}
+H -> T {17} {1}
+H -> void {24} {1}
+T -> boolean {20} {1}
+T -> float {22} {1}
+T -> string {23} {1}
+T -> int {21} {1}
+A -> T id K {33} {3}
+A -> void {24} {1}
+K -> , T id K {34} {4}
+K -> λ {16}
+C -> B C {35} {2}
+C -> λ {16}
+E -> R E1 {36} {2}
+E1 -> && R E1 {37} {3}
+E1 -> λ {16}
+R -> U R1 {38} {2}
+R1 -> == U R1 {39} {3}
+R1 -> λ {16}
+U -> V U1 {40} {2}
+U1 -> / V U1 {41} {3}
+U1 -> λ {16}
+V -> id V1 {42} {2}
+V -> ( E {18} ) {3}
+V -> entero {21} {1}
+V -> real {22} {1}
+V -> cadena {23} {1}
+V1 -> ( L {18} ) {3}
+V1 -> λ {16}
+X -> E {17} {1}
+X -> λ {16}
+L -> E Q {43} {2}
+L -> λ {16}
+Q -> , E Q {44} {3}
+Q -> λ {16}
