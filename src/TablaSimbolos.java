@@ -8,7 +8,7 @@ public class TablaSimbolos {
         private final Integer pos;
         private String tipo;
         private Integer desplazamiento; 
-        private String[] tiposParams;
+        private String tiposParams;
         private int[] modosPasoParams; // 1: por valor, 2: por referencia
         private Integer numParams;
         private String tipoRetorno;
@@ -32,10 +32,10 @@ public class TablaSimbolos {
         public void setDesplazamiento(Integer desplazamiento) { this.desplazamiento = desplazamiento; }
         public Integer getNumParams() { return numParams; }
 
-        public String[] getTiposParams() { return tiposParams; }
+        public String getTiposParams() { return tiposParams; }
         public int[] getModosPasoParams() { return modosPasoParams; }
         public String getTipoRetorno() { return tipoRetorno; }
-        public void setParametros(Integer numParams, String[] tiposParams, int[] modosPasoParams, String tipoRetorno) {
+        public void setParametros(Integer numParams, String tiposParams, int[] modosPasoParams, String tipoRetorno) {
             this.numParams = numParams;
             this.tiposParams = tiposParams;
             this.modosPasoParams = modosPasoParams;
@@ -50,6 +50,7 @@ public class TablaSimbolos {
     private int siguientePos = 1; 
     private String etiqueta;
 
+    public String getEtiqueta() { return etiqueta; }
     public void setEtiqueta(String etiqueta) { this.etiqueta = etiqueta; }
 
     // Devuelve la posición del identificador si existe; -1 si no está.
@@ -117,8 +118,9 @@ public class TablaSimbolos {
             sb.append("  + despl: ").append(s.getDesplazamiento()).append("\n");
         if (s.getNumParams() != null) {
             sb.append("  + numParam: ").append(s.getNumParams()).append("\n");
+            String[] tipos = s.getTiposParams().split(",");
             for (int i = 0; i < s.getNumParams(); i++) {
-                sb.append("    + tipoParam").append(i + 1).append(": ").append(s.getTiposParams()[i]).append("\n");
+                sb.append("    + tipoParam").append(i + 1).append(": ").append(tipos[i]).append("\n");
                 sb.append("    modoParam").append(i + 1).append(": ").append(s.getModosPasoParams()[i]).append("\n");
             }
             sb.append("    + tipoRetorno: ").append(s.getTipoRetorno()).append("\n");

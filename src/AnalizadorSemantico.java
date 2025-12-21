@@ -13,59 +13,44 @@ public class AnalizadorSemantico {
 
     private AnalizadorSemantico() {
         pilaAux = new ArrayList<>();
-        tablaSimbolosGlobal = null;
-        tablaSimbolosLocal = null;
-        etiquetaTablaActual = "";
-        zonaDeclaracion = false;
-        desplazamientoGlobal = 0;
-        desplazamientoLocal = 0;
     }
 
     public static AnalizadorSemantico obtenerInstancia() {
         return instancia;
     }
 
-    public TablaSimbolos getTablaSimbolosGlobal() { return tablaSimbolosGlobal; }
-    public TablaSimbolos getTablaSimbolosLocal() { return tablaSimbolosLocal; }
-    public boolean getZonaDeclaracion() { return zonaDeclaracion; }
-    public void setZonaDeclaracion(boolean zona) { zonaDeclaracion = zona; }
-    public String getEtiquetaTablaActual() { return etiquetaTablaActual; }
-    public void setEtiquetaTablaActual(String etiqueta) { etiquetaTablaActual = etiqueta; }
-    public int getDesplazamientoGlobal() { return desplazamientoGlobal; }
-    public void incrementarDesplazamientoGlobal(int incremento) { desplazamientoGlobal += incremento; }
-    public int getDesplazamientoLocal() { return desplazamientoLocal; }
-    public void incrementarDesplazamientoLocal(int incremento) { desplazamientoLocal += incremento; }
-
     public void accionSemantica(int codigoAccion) {
-        int TOPE = pilaAux.size() - 1;
-        SimpleEntry<String, String> P1 = null;
-        SimpleEntry<String, String> P = null;
-        SimpleEntry<String, String> Pa = null;
-        SimpleEntry<String, String> B = null;
-        SimpleEntry<String, String> F = null;
-        SimpleEntry<String, String> S = null;
-        SimpleEntry<String, String> S1 = null;
-        SimpleEntry<String, String> H = null;
-        SimpleEntry<String, String> T = null;
-        SimpleEntry<String, String> A = null;
-        SimpleEntry<String, String> K = null;
-        SimpleEntry<String, String> Ka = null;
-        SimpleEntry<String, String> C = null;
-        SimpleEntry<String, String> Ca = null;
-        SimpleEntry<String, String> E = null;
-        SimpleEntry<String, String> E1 = null;
-        SimpleEntry<String, String> E1a = null;
-        SimpleEntry<String, String> R = null;
-        SimpleEntry<String, String> R1 = null;
-        SimpleEntry<String, String> R1a = null;
-        SimpleEntry<String, String> U = null;
-        SimpleEntry<String, String> U1 = null;
-        SimpleEntry<String, String> U1a = null;
-        SimpleEntry<String, String> V = null;
-        SimpleEntry<String, String> V1 = null;
-        SimpleEntry<String, String> X = null;
-        SimpleEntry<String, String> L = null;
-        SimpleEntry<String, String> Q = null;
+        int TOPE = pilaAux.size() - 1; // Índice del tope de la pila
+        // Declaración de variables auxiliares para las reglas
+        SimpleEntry<String, String> P1;
+        SimpleEntry<String, String> P;
+        SimpleEntry<String, String> Pa;
+        SimpleEntry<String, String> B;
+        SimpleEntry<String, String> F;
+        SimpleEntry<String, String> S;
+        SimpleEntry<String, String> S1;
+        SimpleEntry<String, String> H;
+        SimpleEntry<String, String> T;
+        SimpleEntry<String, String> A;
+        SimpleEntry<String, String> K;
+        SimpleEntry<String, String> Ka;
+        SimpleEntry<String, String> C;
+        SimpleEntry<String, String> Ca;
+        SimpleEntry<String, String> E;
+        SimpleEntry<String, String> E1;
+        SimpleEntry<String, String> E1a;
+        SimpleEntry<String, String> R;
+        SimpleEntry<String, String> R1;
+        SimpleEntry<String, String> R1a;
+        SimpleEntry<String, String> U;
+        SimpleEntry<String, String> U1;
+        SimpleEntry<String, String> U1a;
+        SimpleEntry<String, String> V;
+        SimpleEntry<String, String> V1;
+        SimpleEntry<String, String> L;
+        SimpleEntry<String, String> Q;
+        SimpleEntry<String, String> Qa;
+        SimpleEntry<String, String> id;
 
         switch (codigoAccion) {
             case 1:
@@ -200,52 +185,249 @@ public class AnalizadorSemantico {
                 }
             break;
             case 27:
-                // aniadirATS(AUX[tope].pos, AUX[tope-1].despl, AUX[tope-1].tipo); AUX[tope-3].tipo:=tipo_ok; accDespl()
+                // B -> let T id
+                B = pilaAux.get(TOPE - 3);
+                T = pilaAux.get(TOPE - 1);
+                id = pilaAux.get(TOPE);
+                actualizarVariableTS(obtenerTablaActual(), id.getValue(), T.getValue());
+                incrementarDesplazamiento(desplazamiento(T.getValue()));
+                B.setValue("tipo_ok");
             break;
             case 28:
+                // S -> id S1
+                S = pilaAux.get(TOPE - 2);
+                id = pilaAux.get(TOPE - 1);
+                S1 = pilaAux.get(TOPE);
+                if (buscarTipo(id.getValue(),obtenerTablaActual()).equals(S1.getValue())) {
+                    S.setValue("tipo_ok");
+                } else if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("funcion") &&
+                            buscarParametros(id.getValue(),obtenerTablaActual()).equals(S1.getValue())) {
+                    S.setValue("tipo_ok");
+                } else if (buscarTipo(id.getValue(),obtenerTablaActual()) == null &&
+                            S1.getValue().equals("entero")) {
+                    S.setValue("tipo_ok");
+                    // tablaSimbolosGlobal.addSimbolo() // ! si no se ha declarado se añade a  TSG, creo que vamos a tener que cambiar como se añade desde el lexico.
+                    actualizarVariableTS(tablaSimbolosGlobal, etiquetaTablaActual, etiquetaTablaActual);
+                } else {
+                    S.setValue("tipo_error");
+                }
             break;
             case 29:
+                // S -> write E
+                S = pilaAux.get(TOPE - 2);
+                E = pilaAux.get(TOPE);
+                if (E.getValue().equals("cadena") || E.getValue().equals("entero") || E.getValue().equals("real")) {
+                    S.setValue(E.getValue());
+                } else {
+                    S.setValue("tipo_error");
+                }
             break;
             case 30:
+                // S -> read id
+                S = pilaAux.get(TOPE - 2);
+                id = pilaAux.get(TOPE);
+                if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("cadena") ||
+                    buscarTipo(id.getValue(),obtenerTablaActual()).equals("entero") ||
+                    buscarTipo(id.getValue(),obtenerTablaActual()).equals("real")) {
+                    S.setValue("tipo_ok");
+                } else {
+                    S.setValue("tipo_error");
+                }
             break;
             case 31:
+                // S -> /= E
+                S = pilaAux.get(TOPE - 2);
+                E = pilaAux.get(TOPE);
+                if (E.getValue().equals("entero") || E.getValue().equals("real")) {
+                    S.setValue(E.getValue());
+                } else {
+                    S.setValue("tipo_error");
+                }
             break;
             case 32:
+                // F -> function H id ( A ) { C
+                F = pilaAux.get(TOPE - 8);
+                H = pilaAux.get(TOPE - 6);
+                id = pilaAux.get(TOPE - 5);
+                A = pilaAux.get(TOPE - 3);
+                C = pilaAux.get(TOPE);
+                if (C.getValue().equals("ret_"+H.getValue())) {
+                    F.setValue("tipo_ok");
+                    actualizarFuncionTS();
+                } else if (H.getValue().equals("void") &&
+                            (C.getValue().equals("vacio") || C.getValue().equals("tipo_ok"))) {
+                    F.setValue("tipo_ok");
+                    actualizarFuncionTS();
+                } else {
+                    F.setValue("tipo_error");
+                }
             break;
             case 33:
+                // A -> T id K
+                A = pilaAux.get(TOPE - 3);
+                T = pilaAux.get(TOPE - 2);
+                K = pilaAux.get(TOPE);
+                if (K.getValue().equals("vacio")) {
+                    A.setValue(T.getValue());
+                } else {
+                    A.setValue(T.getValue() + "," + K.getValue());
+                }
             break;
             case 34:
+                // K -> , T id K
+                K = pilaAux.get(TOPE - 4);
+                T = pilaAux.get(TOPE - 2);
+                Ka = pilaAux.get(TOPE);
+                if (Ka.getValue().equals("vacio")) {
+                    K.setValue(T.getValue());
+                } else {
+                    K.setValue(T.getValue() + "," + Ka.getValue());
+                }
             break;
             case 35:
-            break;
+                // C -> B C
+                C = pilaAux.get(TOPE - 2);
+                B = pilaAux.get(TOPE - 1);
+                Ca = pilaAux.get(TOPE);
+                if (B.getValue().equals("tipo_error") || Ca.getValue().equals("tipo_error")) {
+                    C.setValue("tipo_error");
+                } else if (B.getValue().equals("ret_logico") || B.getValue().equals("ret_entero") ||
+                            B.getValue().equals("ret_real") || B.getValue().equals("ret_cadena")) {
+                    C.setValue(B.getValue());
+                } else if (Ca.getValue().equals("vacio")) {
+                    C.setValue(B.getValue());
+                } else {
+                    C.setValue(Ca.getValue());
+                }
+                break;
             case 36:
+                // E -> R E1
+                E = pilaAux.get(TOPE - 2);
+                R = pilaAux.get(TOPE - 1);
+                E1 = pilaAux.get(TOPE);
+                if (E1.getValue().equals("vacio")) {
+                    E.setValue(R.getValue());
+                } else if (R.getValue().equals(E1.getValue()) && R.getValue().equals("logico")) {
+                    E.setValue("logico");
+                } else {
+                    E.setValue("tipo_error");
+                }
             break;
             case 37:
+                // E1 -> && R E1
+                E1 = pilaAux.get(TOPE - 3);
+                R = pilaAux.get(TOPE - 1);
+                E1a = pilaAux.get(TOPE);
+                if (E1a.getValue().equals("vacio")) {
+                    E1.setValue(R.getValue());
+                } else if (R.getValue().equals(E1a.getValue()) &&
+                            (R.getValue().equals("logico") || R.getValue().equals("entero") || R.getValue().equals("real"))) {
+                    E1.setValue(R.getValue());
+                } else {
+                    E1.setValue("tipo_error");
+                }
             break;
             case 38:
+                // R -> U R1
+                R = pilaAux.get(TOPE - 2);
+                U = pilaAux.get(TOPE - 1);
+                R1 = pilaAux.get(TOPE);
+                if (R1.getValue().equals("vacio")) {
+                    R.setValue(U.getValue());
+                } else if (U.getValue().equals(R1.getValue()) &&
+                            (U.getValue().equals("logico") || U.getValue().equals("entero") || U.getValue().equals("real"))) {
+                    R.setValue(U.getValue());
+                } else {
+                    R.setValue("tipo_error");
+                }
             break;
             case 39:
+                // R1 -> == U R1
+                R1 = pilaAux.get(TOPE - 3);
+                U = pilaAux.get(TOPE - 1);
+                R1a = pilaAux.get(TOPE);
+                if (R1a.getValue().equals("vacio")) {
+                    R1.setValue(U.getValue());
+                } else if (U.getValue().equals(R1a.getValue()) &&
+                            (U.getValue().equals("logico") || U.getValue().equals("entero") || U.getValue().equals("real"))) {
+                    R1.setValue("logico");
+                } else {
+                    R1.setValue("tipo_error");
+                }
             break;
             case 40:
+                // U -> V U1
+                U = pilaAux.get(TOPE - 2);
+                V = pilaAux.get(TOPE - 1);
+                U1 = pilaAux.get(TOPE);
+                if (U1.getValue().equals("vacio")) {
+                    U.setValue(V.getValue());
+                } else if (V.getValue().equals(U1.getValue()) &&
+                            (V.getValue().equals("entero") || V.getValue().equals("real"))) {
+                    U.setValue(V.getValue());
+                } else {
+                    U.setValue("tipo_error");
+                }
             break;
             case 41:
+                // U1 -> / V U1
+                U1 = pilaAux.get(TOPE - 3);
+                V = pilaAux.get(TOPE - 1);
+                U1a = pilaAux.get(TOPE);
+                if (U1a.getValue().equals("vacio")) {
+                    U1.setValue(V.getValue());
+                } else if (V.getValue().equals(U1a.getValue()) &&
+                            (V.getValue().equals("entero") || V.getValue().equals("real"))) {
+                    U1.setValue(V.getValue());
+                } else {
+                    U1.setValue("tipo_error");
+                }
             break;
             case 42:
+                // V -> id V1
+                V = pilaAux.get(TOPE - 2);
+                id = pilaAux.get(TOPE - 1);
+                V1 = pilaAux.get(TOPE);
+                if (V1.getValue().equals("vacio")) {
+                    V.setValue(buscarTipo(id.getValue(),obtenerTablaActual()));
+                } else if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("funcion") &&
+                            buscarParametros(id.getValue(),obtenerTablaActual()).equals(V1.getValue())) {
+                    V.setValue(buscarTipoRetorno(id.getValue(),obtenerTablaActual()));
+                } else {
+                    V.setValue("tipo_error");
+                }
             break;
             case 43:
+                // L -> E Q
+                L = pilaAux.get(TOPE - 2);
+                E = pilaAux.get(TOPE - 1);
+                Q = pilaAux.get(TOPE);
+                if (Q.getValue().equals("vacio")) {
+                    L.setValue(E.getValue());
+                } else {
+                    L.setValue(E.getValue() + "," + Q.getValue());
+                }
             break;
             case 44:
+                // Q -> , E Q
+                Q = pilaAux.get(TOPE - 3);
+                E = pilaAux.get(TOPE - 1);
+                Qa = pilaAux.get(TOPE);
+                if (Qa.getValue().equals("vacio")) {
+                    Q.setValue(E.getValue());
+                } else {
+                    Q.setValue(E.getValue() + "," + Qa.getValue());
+                }
             break;
         }
     }
 
-    private void actualizarVariableTS(TablaSimbolos tabla, Integer pos, String tipo, int desplazamiento) {
+    private void actualizarVariableTS(TablaSimbolos tabla, String pos, String tipo) {
         // TODO
     }
-    private void actualizarFuncionTS(){
-        //TODO
+    private void actualizarFuncionTS() {
+        // TODO
     }
-
     private int desplazamiento(String tipo) {
         switch (tipo) {
             case "logico":
@@ -260,5 +442,55 @@ public class AnalizadorSemantico {
                 return 0;
         }
     }
+
+    private void incrementarDesplazamiento(int incremento) {
+        if (etiquetaTablaActual.equals("global")) {
+            desplazamientoGlobal += incremento;
+        } else {
+            desplazamientoLocal -= incremento;
+        }
+    }
+
+    private TablaSimbolos obtenerTablaActual() {
+        if (etiquetaTablaActual.equals("global")) {
+            return tablaSimbolosGlobal;
+        } else {
+            return tablaSimbolosLocal;
+        }
+    }
+
+    private String buscarTipo(String pos, TablaSimbolos tabla) {
+        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
+        if (s == null) {
+            return null;
+        }
+        return s.getTipo();
+    }
+
+    private String buscarParametros(String pos, TablaSimbolos tabla) {
+        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
+        if (s == null) {
+            return null;
+        }
+        return s.getTiposParams();
+    }
+
+    private String buscarTipoRetorno(String pos, TablaSimbolos tabla) {
+        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
+        if (s == null) {
+            return null;
+        }
+        return s.getTipoRetorno();
+    }
     
+    // Añade desde el Sintáctico los elementos a la pila auxiliar
+    public void pushToAux(String simbolo, String atributo) {
+        pilaAux.add(new SimpleEntry<>(simbolo, atributo));
+    }
+
+    // Condición de análisis semántico correcto
+    public boolean auxEsP1() {
+        return pilaAux.size() == 1 && pilaAux.get(0).getKey().equals("P1")
+                && pilaAux.get(0).getValue().equals("tipo_ok");
+    }
 }

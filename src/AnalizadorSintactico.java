@@ -6,6 +6,7 @@ import java.util.Stack;
 public class AnalizadorSintactico {
     
     private final AnalizadorLexico lexico;
+    private final AnalizadorSemantico semantico;
     private Stack<String> pila;
     private HashMap<String, HashMap<String, String>> tabla; // No terminal -> (Terminal -> Regla)
     private Set<String> terminales;
@@ -17,6 +18,7 @@ public class AnalizadorSintactico {
 
     public AnalizadorSintactico(AnalizadorLexico lexico) {
         this.lexico = lexico;
+        this.semantico = AnalizadorSemantico.obtenerInstancia();
         inicializarPila();
         inicializarTabla();
         inicializarSetTerminales();
@@ -30,9 +32,14 @@ public class AnalizadorSintactico {
         while (!pila.isEmpty()) {
             String topePila = pila.peek();
 
-            if (terminales.contains(topePila)) {
+            if (topePila.startsWith("{") && topePila.endsWith("}")) { // Acción semántica
+                int accion = Integer.parseInt(topePila.substring(1, topePila.length()-1));
+                semantico.accionSemantica(accion);
+                pila.pop();
+            } else if (terminales.contains(topePila)) {
                 if (topePila.equals(tokenActual)) {
-                    pila.pop();
+                    String simbolo = pila.pop();
+                    semantico.pushToAux(simbolo, lexemaActual); // Asumir método en semántico
                     lexemaAnterior = lexemaActual;
                     tokenActual = leerSiguienteToken();
                 } else {
@@ -41,27 +48,25 @@ public class AnalizadorSintactico {
                     return "0";
                 }
             } else {
+                // No terminal
                 HashMap<String, String> reglas = tabla.get(topePila);
                 if (reglas != null && reglas.containsKey(tokenActual)) {
-                    pila.pop();
+                    String simbolo = pila.pop();
+                    semantico.pushToAux(simbolo, null);
                     String regla = reglas.get(tokenActual);
                     String numero = regla.substring(0, regla.indexOf('.'));
                     parse += numero + " ";
                     String produccion = regla.substring(regla.indexOf('.') + 1);
-                    if (!produccion.equals("lambda")) {
-                        String[] simbolos = produccion.split(" ");
-                        for (int i = simbolos.length - 1; i >= 0; i--) {
+                    String[] simbolos = produccion.split(" ");
+                    for (int i = simbolos.length - 1; i >= 0; i--) {
+                        if(!simbolos[i].equals("lambda"))
                             pila.push(simbolos[i]);
-                        }
                     }
                 } else {
-                    // No hay regla para el no terminal con el token actual
-                    // Obtener las reglas posibles para el no terminal
                     Map<String,String> posibles = tabla.get(topePila);
-                    // Obtener los terminales posibles
                     String esperados = "";
                     for (String s : posibles.keySet()) esperados += "'" + s + "', ";
-                    esperados = esperados.substring(0, esperados.length()-2); // Quitar la última coma y espacio
+                    esperados = esperados.substring(0, esperados.length()-2);
                     GestorErrores.obtenerInstancia().mostrarError(202,
                         lexico.getLinea(), topePila, tokenActual, lexemaAnterior, esperados);
                     return "0";
@@ -69,9 +74,9 @@ public class AnalizadorSintactico {
             }
         }
 
-        if (tokenActual.equals("$")) {
-            System.out.println("\033[32mAnálisis sintáctico completado con éxito.\033[0m");
-            return parse.substring(0, parse.length()-1); // Eliminar el espacio final.
+        if (tokenActual.equals("$") && semantico.auxEsP1()) {
+            System.out.println("\033[32mAnálisis sintáctico y semántico completado con éxito.\033[0m");
+            return parse.substring(0, parse.length()-1);
         } else {
             GestorErrores.obtenerInstancia().mostrarError(201,
                 lexico.getLinea(), "$", tokenActual, lexemaAnterior, null);
@@ -123,62 +128,62 @@ public class AnalizadorSintactico {
         tabla = new HashMap<>();
 
         HashMap<String, String> reglasP1 = new HashMap<>();
-        reglasP1.put("function", "1.P");
-        reglasP1.put("if", "1.P");
-        reglasP1.put("let", "1.P");
-        reglasP1.put("read", "1.P");
-        reglasP1.put("return", "1.P");
-        reglasP1.put("while", "1.P");
-        reglasP1.put("write", "1.P");
-        reglasP1.put("id", "1.P");
-        reglasP1.put("$", "1.P");
+        reglasP1.put("function", "1.{10} P {13} {1}");
+        reglasP1.put("if", "1.{10} P {13} {1}");
+        reglasP1.put("let", "1.{10} P {13} {1}");
+        reglasP1.put("read", "1.{10} P {13} {1}");
+        reglasP1.put("return", "1.{10} P {13} {1}");
+        reglasP1.put("while", "1.{10} P {13} {1}");
+        reglasP1.put("write", "1.{10} P {13} {1}");
+        reglasP1.put("id", "1.{10} P {13} {1}");
+        reglasP1.put("$", "1.{10} P {13} {1}");
         tabla.put("P1", reglasP1);
 
         HashMap<String, String> reglasP = new HashMap<>();
-        reglasP.put("function", "3.F P");
-        reglasP.put("if", "2.B P");
-        reglasP.put("let", "2.B P");
-        reglasP.put("read", "2.B P");
-        reglasP.put("return", "2.B P");
-        reglasP.put("while", "2.B P");
-        reglasP.put("write", "2.B P");
-        reglasP.put("id", "2.B P");
-        reglasP.put("$", "4.lambda");
+        reglasP.put("function", "3.F P {15} {2}");
+        reglasP.put("if", "2.B P {14} {2}");
+        reglasP.put("let", "2.B P {14} {2}");
+        reglasP.put("read", "2.B P {14} {2}");
+        reglasP.put("return", "2.B P {14} {2}");
+        reglasP.put("while", "2.B P {14} {2}");
+        reglasP.put("write", "2.B P {14} {2}");
+        reglasP.put("id", "2.B P {14} {2}");
+        reglasP.put("$", "4.lambda {16}");
         tabla.put("P", reglasP);
 
         HashMap<String, String> reglasB = new HashMap<>();
-        reglasB.put("if", "7.if ( E ) S");
-        reglasB.put("let", "8.let T id ;");
-        reglasB.put("read", "5.S");
-        reglasB.put("return", "5.S");
-        reglasB.put("while", "6.while ( E ) { C }");
-        reglasB.put("write", "5.S");
-        reglasB.put("id", "5.S");
+        reglasB.put("if", "7.if ( E ) S  {26} {5}");
+        reglasB.put("let", "8.let {8} T id {6} {27} ; {4}");
+        reglasB.put("read", "5.S {17} {1}");
+        reglasB.put("return", "5.S {17} {1}");
+        reglasB.put("while", "6.while ( E ) { C {25} } {7}");
+        reglasB.put("write", "5.S {17} {1}");
+        reglasB.put("id", "5.S {17} {1}");
         tabla.put("B", reglasB);
 
         HashMap<String, String> reglasS = new HashMap<>();
-        reglasS.put("read", "11.read id ;");
-        reglasS.put("return", "12.return X ;");
-        reglasS.put("write", "10.write E ;");
-        reglasS.put("id","9.id S1");
+        reglasS.put("read", "11.read id {30} ; {3}");
+        reglasS.put("return", "12.return X {19} ; {3}");
+        reglasS.put("write", "10.write E {29} ; {3}");
+        reglasS.put("id","9.id S1 {28} {2}");
         tabla.put("S", reglasS);
 
         HashMap<String, String> reglasS1 = new HashMap<>();
-        reglasS1.put("=", "13.= E ;");
-        reglasS1.put("/=", "14./= E ;");
-        reglasS1.put("(", "15.( L ) ;");
+        reglasS1.put("=", "13.= E {18} ; {3}");
+        reglasS1.put("/=", "14./= E {31} ; {3}");
+        reglasS1.put("(", "15.( L {18} ) ; {4}");
         tabla.put("S1", reglasS1);
 
         HashMap<String, String> reglasF = new HashMap<>();
-        reglasF.put("function", "16.function H id ( A ) { C }");
+        reglasF.put("function", "16.function {8} H id {11} ( A {6} ) { C {32} {12} } {9}");
         tabla.put("F", reglasF);
 
         HashMap<String, String> reglasH = new HashMap<>();
-        reglasH.put("boolean", "17.T");
-        reglasH.put("float", "17.T");
-        reglasH.put("int", "17.T");
-        reglasH.put("string", "17.T");
-        reglasH.put("void", "18.void");
+        reglasH.put("boolean", "17.T {17} {1}");
+        reglasH.put("float", "17.T {17} {1}");
+        reglasH.put("int", "17.T {17} {1}");
+        reglasH.put("string", "17.T {17} {1}");
+        reglasH.put("void", "18.void {24} {1}");
         tabla.put("H", reglasH);
 
         HashMap<String, String> reglasT = new HashMap<>();
@@ -189,116 +194,116 @@ public class AnalizadorSintactico {
         tabla.put("T", reglasT);
 
         HashMap<String, String> reglasA = new HashMap<>();
-        reglasA.put("boolean", "23.T id K");
-        reglasA.put("float", "23.T id K");
-        reglasA.put("int", "23.T id K");
-        reglasA.put("string", "23.T id K");
-        reglasA.put("void", "24.void");
+        reglasA.put("boolean", "23.T id K {33} {3}");
+        reglasA.put("float", "23.T id K {33} {3}");
+        reglasA.put("int", "23.T id K {33} {3}");
+        reglasA.put("string", "23.T id K {33} {3}");
+        reglasA.put("void", "24.void {24} {1}");
         tabla.put("A", reglasA);
 
         HashMap<String, String> reglasK = new HashMap<>();
-        reglasK.put(")", "26.lambda");
-        reglasK.put(",", "25., T id K");
+        reglasK.put(")", "26.lambda {16}");
+        reglasK.put(",", "25., T id K {34} {4}");
         tabla.put("K", reglasK);
 
         HashMap<String, String> reglasC = new HashMap<>();
-        reglasC.put("if", "27.B C");
-        reglasC.put("let", "27.B C");
-        reglasC.put("read", "27.B C");
-        reglasC.put("return", "27.B C");
-        reglasC.put("while", "27.B C");
-        reglasC.put("write", "27.B C");
-        reglasC.put("}", "28.lambda");
-        reglasC.put("id", "27.B C");
+        reglasC.put("if", "27.B C {35} {2}");
+        reglasC.put("let", "27.B C {35} {2}");
+        reglasC.put("read", "27.B C {35} {2}");
+        reglasC.put("return", "27.B C {35} {2}");
+        reglasC.put("while", "27.B C {35} {2}");
+        reglasC.put("write", "27.B C {35} {2}");
+        reglasC.put("}", "28.lambda {16}");
+        reglasC.put("id", "27.B C {35} {2}");
         tabla.put("C", reglasC);
 
         HashMap<String, String> reglasE = new HashMap<>();
-        reglasE.put("(", "29.R E1");
-        reglasE.put("id", "29.R E1");
-        reglasE.put("entero", "29.R E1");
-        reglasE.put("real",  "29.R E1");
-        reglasE.put("cadena", "29.R E1");
+        reglasE.put("(", "29.R E1 {36} {2}");
+        reglasE.put("id", "29.R E1 {36} {2}");
+        reglasE.put("entero", "29.R E1 {36} {2}");
+        reglasE.put("real",  "29.R E1 {36} {2}");
+        reglasE.put("cadena", "29.R E1 {36} {2}");
         tabla.put("E", reglasE);
 
         HashMap<String, String> reglasE1 = new HashMap<>();
-        reglasE1.put("&&", "30.&& R E1");
-        reglasE1.put(")", "31.lambda");
-        reglasE1.put(",", "31.lambda");
-        reglasE1.put(";", "31.lambda");
+        reglasE1.put("&&", "30.&& R E1 {37} {3}");
+        reglasE1.put(")", "31.lambda {16}");
+        reglasE1.put(",", "31.lambda {16}");
+        reglasE1.put(";", "31.lambda {16}");
         tabla.put("E1", reglasE1);
 
         HashMap<String, String> reglasR = new HashMap<>();
-        reglasR.put("(", "32.U R1");
-        reglasR.put("id", "32.U R1");
-        reglasR.put("entero", "32.U R1");
-        reglasR.put("real", "32.U R1");
-        reglasR.put("cadena", "32.U R1");
+        reglasR.put("(", "32.U R1 {38} {2}");
+        reglasR.put("id", "32.U R1 {38} {2}");
+        reglasR.put("entero", "32.U R1 {38} {2}");
+        reglasR.put("real", "32.U R1 {38} {2}");
+        reglasR.put("cadena", "32.U R1 {38} {2}");
         tabla.put("R", reglasR);
 
         HashMap<String, String> reglasR1 = new HashMap<>();
-        reglasR1.put("==", "33.== U R1");
-        reglasR1.put("&&", "34.lambda");
-        reglasR1.put(")", "34.lambda");
-        reglasR1.put(",", "34.lambda");
-        reglasR1.put(";", "34.lambda");
+        reglasR1.put("==", "33.== U R1 {39} {3}");
+        reglasR1.put("&&", "34.lambda {16}");
+        reglasR1.put(")", "34.lambda {16}");
+        reglasR1.put(",", "34.lambda {16}");
+        reglasR1.put(";", "34.lambda {16}");
         tabla.put("R1", reglasR1);
         
         HashMap<String, String> reglasU = new HashMap<>();
-        reglasU.put("(", "35.V U1");
-        reglasU.put("id", "35.V U1");
-        reglasU.put("entero", "35.V U1");
-        reglasU.put("real", "35.V U1");
-        reglasU.put("cadena", "35.V U1");
+        reglasU.put("(", "35.V U1 {40} {2}");
+        reglasU.put("id", "35.V U1 {40} {2}");
+        reglasU.put("entero", "35.V U1 {40} {2}");
+        reglasU.put("real", "35.V U1 {40} {2}");
+        reglasU.put("cadena", "35.V U1 {40} {2}");
         tabla.put("U", reglasU);
 
         HashMap<String, String> reglasU1 = new HashMap<>();
-        reglasU1.put("/", "36./ V U1");
-        reglasU1.put("==", "37.lambda"); 
-        reglasU1.put("&&", "37.lambda");
-        reglasU1.put(")", "37.lambda");
-        reglasU1.put(",", "37.lambda");
-        reglasU1.put(";", "37.lambda");
+        reglasU1.put("/", "36./ V U1 {41} {3}");
+        reglasU1.put("==", "37.lambda {16}"); 
+        reglasU1.put("&&", "37.lambda {16}");
+        reglasU1.put(")", "37.lambda {16}");
+        reglasU1.put(",", "37.lambda {16}");
+        reglasU1.put(";", "37.lambda {16}");
         tabla.put("U1", reglasU1);
 
         HashMap<String, String> reglasV = new HashMap<>();
-        reglasV.put("(", "39.( E )");
-        reglasV.put("id", "38.id V1");
-        reglasV.put("entero", "40.entero");
-        reglasV.put("real", "41.real");
-        reglasV.put("cadena", "42.cadena");
+        reglasV.put("(", "39.( E {18} ) {3}");
+        reglasV.put("id", "38.id V1 {42} {2}");
+        reglasV.put("entero", "40.entero {21} {1}");
+        reglasV.put("real", "41.real {22} {1}");
+        reglasV.put("cadena", "42.cadena {23} {1}");
         tabla.put("V", reglasV);
 
         HashMap<String, String> reglasV1 = new HashMap<>();
-        reglasV1.put("(", "43.( L )");
-        reglasV1.put(")", "44.lambda");
-        reglasV1.put("/", "44.lambda");
-        reglasV1.put("==", "44.lambda");
-        reglasV1.put("&&", "44.lambda");
-        reglasV1.put(",", "44.lambda");
-        reglasV1.put(";", "44.lambda");
+        reglasV1.put("(", "43.( L {18} ) {3}");
+        reglasV1.put(")", "44.lambda {16}");
+        reglasV1.put("/", "44.lambda {16}");
+        reglasV1.put("==", "44.lambda {16}");
+        reglasV1.put("&&", "44.lambda {16}");
+        reglasV1.put(",", "44.lambda {16}");
+        reglasV1.put(";", "44.lambda {16}");
         tabla.put("V1", reglasV1);
 
         HashMap<String, String> reglasX = new HashMap<>();
-        reglasX.put("(", "45.E");
-        reglasX.put(";", "46.lambda");
-        reglasX.put("id", "45.E");
-        reglasX.put("entero", "45.E");
-        reglasX.put("real", "45.E");
-        reglasX.put("cadena", "45.E");
+        reglasX.put("(", "45.E {17} {1}");
+        reglasX.put(";", "46.lambda {16}");
+        reglasX.put("id", "45.E {17} {1}");
+        reglasX.put("entero", "45.E {17} {1}");
+        reglasX.put("real", "45.E {17} {1}");
+        reglasX.put("cadena", "45.E {17} {1}");
         tabla.put("X", reglasX);
 
         HashMap<String, String> reglasL = new HashMap<>();
-        reglasL.put("(", "47.E Q");
-        reglasL.put(")", "48.lambda");
-        reglasL.put("id", "47.E Q");
-        reglasL.put("entero", "47.E Q");
-        reglasL.put("real", "47.E Q");
-        reglasL.put("cadena", "47.E Q");
+        reglasL.put("(", "47.E Q {43} {2}");
+        reglasL.put(")", "48.lambda {16}");
+        reglasL.put("id", "47.E Q {43} {2}");
+        reglasL.put("entero", "47.E Q {43} {2}");
+        reglasL.put("real", "47.E Q {43} {2}");
+        reglasL.put("cadena", "47.E Q {43} {2}");
         tabla.put("L", reglasL);
 
         HashMap<String, String> reglasQ = new HashMap<>();
-        reglasQ.put(")", "50.lambda");
-        reglasQ.put(",", "49., E Q");
+        reglasQ.put(")", "50.lambda {16}");
+        reglasQ.put(",", "49., E Q {44} {3}");
         tabla.put("Q", reglasQ);
     }
 
