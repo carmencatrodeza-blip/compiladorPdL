@@ -2,24 +2,19 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 
 public class AnalizadorSemantico {
-    private static final AnalizadorSemantico instancia = new AnalizadorSemantico();
+    private final Compilador compilador;
     ArrayList<SimpleEntry<String, String>> pilaAux;
-    TablaSimbolos tablaSimbolosGlobal;
-    TablaSimbolos tablaSimbolosLocal;
-    String etiquetaTablaActual;
-    boolean zonaDeclaracion;
     int desplazamientoGlobal;
     int desplazamientoLocal;
 
-    private AnalizadorSemantico() {
+    public AnalizadorSemantico(Compilador compilador) {
+        this.compilador = compilador;
         pilaAux = new ArrayList<>();
     }
 
-    public static AnalizadorSemantico obtenerInstancia() {
-        return instancia;
-    }
-
     public void accionSemantica(int codigoAccion) {
+        // TODO: Implementar lanzamiento de errores semanticos
+        System.out.println("DEBUG: Antes de accion semantica " + codigoAccion + ", pilaAux: " + pilaAux);
         int TOPE = pilaAux.size() - 1; // Índice del tope de la pila
         // Declaración de variables auxiliares para las reglas
         SimpleEntry<String, String> P1;
@@ -69,53 +64,53 @@ public class AnalizadorSemantico {
                 pilaAux.subList(TOPE - 4, TOPE + 1).clear();
             break;
             case 6:
-                zonaDeclaracion = false;
+                compilador.setZonaDeclaracion(false);
             break;
             case 7:
                 pilaAux.subList(TOPE - 6, TOPE + 1).clear();
             break;
             case 8:
-                zonaDeclaracion = true;
+                compilador.setZonaDeclaracion(true);
             break;
             case 9:
                 pilaAux.subList(TOPE - 8, TOPE + 1).clear();
             break;
             case 10:
-                tablaSimbolosGlobal = new TablaSimbolos();
                 desplazamientoGlobal = 1;
-                etiquetaTablaActual = "global";
             break;
             case 11:
-                tablaSimbolosLocal = new TablaSimbolos();
+                compilador.setTablaLocal(new TablaSimbolos());
                 desplazamientoLocal = -1;
-                etiquetaTablaActual = "funcion_" + tablaSimbolosGlobal.getId(Integer.parseInt(pilaAux.get(TOPE).getValue()));
+                String etiqueta = "FUNCION_" + compilador.getTablaGlobal().getId(Integer.parseInt(pilaAux.get(TOPE).getValue()));
+                compilador.setEtiquetaActual(etiqueta);
             break;
             case 12:
-                tablaSimbolosLocal = null;
-                etiquetaTablaActual = "global";
+                compilador.getWriter().write(compilador.getTablaLocal().toString(), "tabla");
+                compilador.setTablaLocal(null);
+                compilador.setEtiquetaActual("GLOBAL");
             break;
             case 13:
                 // P1 -> P
                 P1 = pilaAux.get(TOPE - 1);
                 P = pilaAux.get(TOPE);   
-                if(P.getValue().equals("tipo_ok"))
+                if("tipo_ok".equals(P.getValue()))
                     P1.setValue("tipo_ok");
                 else
                     P1.setValue("tipo_error");
-                tablaSimbolosGlobal = null;
+                compilador.getWriter().write(compilador.getTablaGlobal().toString(), "tabla");
             break;
             case 14:
                 // P -> B P
                 P = pilaAux.get(TOPE - 2);
                 B = pilaAux.get(TOPE - 1);
                 Pa = pilaAux.get(TOPE);
-                if (B.getValue().equals("ret_logico") || B.getValue().equals("ret_entero") ||
-                    B.getValue().equals("ret_real") || B.getValue().equals("ret_cadena")) {
+                if ("ret_logico".equals(B.getValue()) || "ret_entero".equals(B.getValue()) ||
+                    "ret_real".equals(B.getValue()) || "ret_cadena".equals(B.getValue())) {
                     P.setValue("tipo_error");
-                } else if (Pa.getValue().equals("vacio")) {
+                } else if ("vacio".equals(Pa.getValue())) {
                     P.setValue(B.getValue());
                 } else if (B.getValue().equals(Pa.getValue()) &&
-                        (B.getValue().equals("tipo_ok"))) {
+                        ("tipo_ok".equals(B.getValue()))) {
                     P.setValue("tipo_ok");
                 } else {
                     P.setValue("tipo_error");
@@ -126,10 +121,10 @@ public class AnalizadorSemantico {
                 P = pilaAux.get(TOPE - 2);
                 F = pilaAux.get(TOPE - 1);
                 Pa = pilaAux.get(TOPE);
-                if (Pa.getValue().equals("vacio")) {
+                if ("vacio".equals(Pa.getValue())) {
                     P.setValue(F.getValue());
                 } else if (F.getValue().equals(Pa.getValue()) &&
-                        (F.getValue().equals("tipo_ok"))) {
+                        ("tipo_ok".equals(F.getValue()))) {
                     P.setValue("tipo_ok");
                 } else {
                     P.setValue("tipo_error");
@@ -145,7 +140,7 @@ public class AnalizadorSemantico {
                 pilaAux.get(TOPE - 2).setValue(pilaAux.get(TOPE).getValue());
             break;
             case 19:
-                pilaAux.get(TOPE - 1).setValue("ret_" + pilaAux.get(TOPE).getValue());
+                pilaAux.get(TOPE - 2).setValue("ret_" + pilaAux.get(TOPE).getValue());
             break;
             case 20:
                 pilaAux.get(TOPE - 1).setValue("logico");
@@ -167,7 +162,7 @@ public class AnalizadorSemantico {
                 B = pilaAux.get(TOPE - 6);
                 E = pilaAux.get(TOPE - 3);
                 C = pilaAux.get(TOPE);
-                if (E.getValue().equals("logico") && !C.getValue().equals("tipo_error")) {
+                if ("logico".equals(E.getValue()) && !"tipo_error".equals(C.getValue())) {
                     B.setValue(C.getValue());
                 } else {
                     B.setValue("tipo_error");
@@ -178,7 +173,7 @@ public class AnalizadorSemantico {
                 B = pilaAux.get(TOPE - 5);
                 E = pilaAux.get(TOPE - 2);
                 S = pilaAux.get(TOPE);
-                if (E.getValue().equals("logico") && S.getValue().equals("tipo_ok")) {
+                if ("logico".equals(E.getValue()) && "tipo_ok".equals(S.getValue())) {
                     B.setValue("tipo_ok");
                 } else {
                     B.setValue("tipo_error");
@@ -198,16 +193,17 @@ public class AnalizadorSemantico {
                 S = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE - 1);
                 S1 = pilaAux.get(TOPE);
-                if (buscarTipo(id.getValue(),obtenerTablaActual()).equals(S1.getValue())) {
+                if (buscarTipo(id.getValue()).equals(S1.getValue())) {
                     S.setValue("tipo_ok");
-                } else if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("funcion") &&
-                            buscarParametros(id.getValue(),obtenerTablaActual()).equals(S1.getValue())) {
+                } else if ("funcion".equals(buscarTipo(id.getValue())) &&
+                            buscarParametros(id.getValue()).equals(S1.getValue())) {
                     S.setValue("tipo_ok");
-                } else if (buscarTipo(id.getValue(),obtenerTablaActual()) == null &&
-                            S1.getValue().equals("entero")) {
+                } else if (buscarTipo(id.getValue()) == null &&
+                            "entero".equals(S1.getValue())) {
                     S.setValue("tipo_ok");
                     // tablaSimbolosGlobal.addSimbolo() // ! si no se ha declarado se añade a  TSG, creo que vamos a tener que cambiar como se añade desde el lexico.
-                    actualizarVariableTS(tablaSimbolosGlobal, etiquetaTablaActual, etiquetaTablaActual);
+                    // actualizarVariableTS();
+                    // incrementarDesplazamiento();
                 } else {
                     S.setValue("tipo_error");
                 }
@@ -216,8 +212,8 @@ public class AnalizadorSemantico {
                 // S -> write E
                 S = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE);
-                if (E.getValue().equals("cadena") || E.getValue().equals("entero") || E.getValue().equals("real")) {
-                    S.setValue(E.getValue());
+                if ("cadena".equals(E.getValue()) || "entero".equals(E.getValue()) || "real".equals(E.getValue())) {
+                    S.setValue("tipo_ok");
                 } else {
                     S.setValue("tipo_error");
                 }
@@ -226,9 +222,9 @@ public class AnalizadorSemantico {
                 // S -> read id
                 S = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE);
-                if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("cadena") ||
-                    buscarTipo(id.getValue(),obtenerTablaActual()).equals("entero") ||
-                    buscarTipo(id.getValue(),obtenerTablaActual()).equals("real")) {
+                if ("cadena".equals(buscarTipo(id.getValue())) ||
+                    "entero".equals(buscarTipo(id.getValue())) ||
+                    "real".equals(buscarTipo(id.getValue()))) {
                     S.setValue("tipo_ok");
                 } else {
                     S.setValue("tipo_error");
@@ -238,8 +234,8 @@ public class AnalizadorSemantico {
                 // S -> /= E
                 S = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE);
-                if (E.getValue().equals("entero") || E.getValue().equals("real")) {
-                    S.setValue(E.getValue());
+                if ("entero".equals(E.getValue()) || "real".equals(E.getValue())) {
+                    S.setValue("tipo_ok");
                 } else {
                     S.setValue("tipo_error");
                 }
@@ -253,11 +249,11 @@ public class AnalizadorSemantico {
                 C = pilaAux.get(TOPE);
                 if (C.getValue().equals("ret_"+H.getValue())) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS();
-                } else if (H.getValue().equals("void") &&
-                            (C.getValue().equals("vacio") || C.getValue().equals("tipo_ok"))) {
+                    actualizarFuncionTS(compilador.getTablaGlobal(),id.getValue(),A.getValue(),H.getValue(),compilador.getEtiquetaActual());
+                } else if ("void".equals(H.getValue()) &&
+                            ("vacio".equals(C.getValue()) || "tipo_ok".equals(C.getValue()))) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS();
+                    actualizarFuncionTS(compilador.getTablaGlobal(),id.getValue(),A.getValue(),H.getValue(),compilador.getEtiquetaActual());
                 } else {
                     F.setValue("tipo_error");
                 }
@@ -267,7 +263,7 @@ public class AnalizadorSemantico {
                 A = pilaAux.get(TOPE - 3);
                 T = pilaAux.get(TOPE - 2);
                 K = pilaAux.get(TOPE);
-                if (K.getValue().equals("vacio")) {
+                if ("vacio".equals(K.getValue())) {
                     A.setValue(T.getValue());
                 } else {
                     A.setValue(T.getValue() + "," + K.getValue());
@@ -278,23 +274,23 @@ public class AnalizadorSemantico {
                 K = pilaAux.get(TOPE - 4);
                 T = pilaAux.get(TOPE - 2);
                 Ka = pilaAux.get(TOPE);
-                if (Ka.getValue().equals("vacio")) {
+                if ("vacio".equals(Ka.getValue())) {
                     K.setValue(T.getValue());
                 } else {
                     K.setValue(T.getValue() + "," + Ka.getValue());
                 }
             break;
             case 35:
-                // C -> B C
+                // C -> B Ca
                 C = pilaAux.get(TOPE - 2);
                 B = pilaAux.get(TOPE - 1);
                 Ca = pilaAux.get(TOPE);
-                if (B.getValue().equals("tipo_error") || Ca.getValue().equals("tipo_error")) {
+                if ("tipo_error".equals(B.getValue()) || "tipo_error".equals(Ca.getValue())) {
                     C.setValue("tipo_error");
-                } else if (B.getValue().equals("ret_logico") || B.getValue().equals("ret_entero") ||
-                            B.getValue().equals("ret_real") || B.getValue().equals("ret_cadena")) {
+                } else if ("ret_logico".equals(B.getValue()) || "ret_entero".equals(B.getValue()) ||
+                            "ret_real".equals(B.getValue()) || "ret_cadena".equals(B.getValue())) {
                     C.setValue(B.getValue());
-                } else if (Ca.getValue().equals("vacio")) {
+                } else if ("vacio".equals(Ca.getValue())) {
                     C.setValue(B.getValue());
                 } else {
                     C.setValue(Ca.getValue());
@@ -305,9 +301,9 @@ public class AnalizadorSemantico {
                 E = pilaAux.get(TOPE - 2);
                 R = pilaAux.get(TOPE - 1);
                 E1 = pilaAux.get(TOPE);
-                if (E1.getValue().equals("vacio")) {
+                if ("vacio".equals(E1.getValue())) {
                     E.setValue(R.getValue());
-                } else if (R.getValue().equals(E1.getValue()) && R.getValue().equals("logico")) {
+                } else if ("logico".equals(R.getValue()) && R.getValue().equals(E1.getValue())) {
                     E.setValue("logico");
                 } else {
                     E.setValue("tipo_error");
@@ -318,10 +314,10 @@ public class AnalizadorSemantico {
                 E1 = pilaAux.get(TOPE - 3);
                 R = pilaAux.get(TOPE - 1);
                 E1a = pilaAux.get(TOPE);
-                if (E1a.getValue().equals("vacio")) {
+                if ("vacio".equals(E1a.getValue())) {
                     E1.setValue(R.getValue());
-                } else if (R.getValue().equals(E1a.getValue()) &&
-                            (R.getValue().equals("logico") || R.getValue().equals("entero") || R.getValue().equals("real"))) {
+                } else if (("logico".equals(R.getValue()) || "entero".equals(R.getValue()) ||
+                            "real".equals(R.getValue())) && R.getValue().equals(E1a.getValue())) {
                     E1.setValue(R.getValue());
                 } else {
                     E1.setValue("tipo_error");
@@ -332,11 +328,11 @@ public class AnalizadorSemantico {
                 R = pilaAux.get(TOPE - 2);
                 U = pilaAux.get(TOPE - 1);
                 R1 = pilaAux.get(TOPE);
-                if (R1.getValue().equals("vacio")) {
+                if ("vacio".equals(R1.getValue())) {
                     R.setValue(U.getValue());
-                } else if (U.getValue().equals(R1.getValue()) &&
-                            (U.getValue().equals("logico") || U.getValue().equals("entero") || U.getValue().equals("real"))) {
-                    R.setValue(U.getValue());
+                } else if (("logico".equals(U.getValue()) || "entero".equals(U.getValue()) ||
+                            "real".equals(U.getValue())) && U.getValue().equals(R1.getValue())) {
+                    R.setValue("logico");
                 } else {
                     R.setValue("tipo_error");
                 }
@@ -346,11 +342,11 @@ public class AnalizadorSemantico {
                 R1 = pilaAux.get(TOPE - 3);
                 U = pilaAux.get(TOPE - 1);
                 R1a = pilaAux.get(TOPE);
-                if (R1a.getValue().equals("vacio")) {
+                if ("vacio".equals(R1a.getValue())) {
                     R1.setValue(U.getValue());
-                } else if (U.getValue().equals(R1a.getValue()) &&
-                            (U.getValue().equals("logico") || U.getValue().equals("entero") || U.getValue().equals("real"))) {
-                    R1.setValue("logico");
+                } else if (("logico".equals(U.getValue()) || "entero".equals(U.getValue()) ||
+                            "real".equals(U.getValue())) && U.getValue().equals(R1a.getValue())) {
+                    R1.setValue(U.getValue());
                 } else {
                     R1.setValue("tipo_error");
                 }
@@ -360,10 +356,10 @@ public class AnalizadorSemantico {
                 U = pilaAux.get(TOPE - 2);
                 V = pilaAux.get(TOPE - 1);
                 U1 = pilaAux.get(TOPE);
-                if (U1.getValue().equals("vacio")) {
+                if ("vacio".equals(U1.getValue())) {
                     U.setValue(V.getValue());
-                } else if (V.getValue().equals(U1.getValue()) &&
-                            (V.getValue().equals("entero") || V.getValue().equals("real"))) {
+                } else if (("entero".equals(V.getValue()) || "real".equals(V.getValue()))
+                            && V.getValue().equals(U1.getValue())) {
                     U.setValue(V.getValue());
                 } else {
                     U.setValue("tipo_error");
@@ -376,8 +372,8 @@ public class AnalizadorSemantico {
                 U1a = pilaAux.get(TOPE);
                 if (U1a.getValue().equals("vacio")) {
                     U1.setValue(V.getValue());
-                } else if (V.getValue().equals(U1a.getValue()) &&
-                            (V.getValue().equals("entero") || V.getValue().equals("real"))) {
+                } else if (("entero".equals(V.getValue()) || "real".equals(V.getValue()))
+                            && V.getValue().equals(U1a.getValue())) {
                     U1.setValue(V.getValue());
                 } else {
                     U1.setValue("tipo_error");
@@ -388,11 +384,11 @@ public class AnalizadorSemantico {
                 V = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE - 1);
                 V1 = pilaAux.get(TOPE);
-                if (V1.getValue().equals("vacio")) {
-                    V.setValue(buscarTipo(id.getValue(),obtenerTablaActual()));
-                } else if (buscarTipo(id.getValue(),obtenerTablaActual()).equals("funcion") &&
-                            buscarParametros(id.getValue(),obtenerTablaActual()).equals(V1.getValue())) {
-                    V.setValue(buscarTipoRetorno(id.getValue(),obtenerTablaActual()));
+                if ("vacio".equals(V1.getValue())) {
+                    V.setValue(buscarTipo(id.getValue()));
+                } else if ("funcion".equals(buscarTipo(id.getValue())) &&
+                            buscarParametros(id.getValue()).equals(V1.getValue())) {
+                    V.setValue(buscarTipoRetorno(id.getValue()));
                 } else {
                     V.setValue("tipo_error");
                 }
@@ -402,7 +398,7 @@ public class AnalizadorSemantico {
                 L = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE - 1);
                 Q = pilaAux.get(TOPE);
-                if (Q.getValue().equals("vacio")) {
+                if ("vacio".equals(Q.getValue())) {
                     L.setValue(E.getValue());
                 } else {
                     L.setValue(E.getValue() + "," + Q.getValue());
@@ -413,20 +409,33 @@ public class AnalizadorSemantico {
                 Q = pilaAux.get(TOPE - 3);
                 E = pilaAux.get(TOPE - 1);
                 Qa = pilaAux.get(TOPE);
-                if (Qa.getValue().equals("vacio")) {
+                if ("vacio".equals(Qa.getValue())) {
                     Q.setValue(E.getValue());
                 } else {
                     Q.setValue(E.getValue() + "," + Qa.getValue());
                 }
             break;
+            case 45:
+                // A -> T id ; K -> , T id
+                id = pilaAux.get(TOPE);
+                T = pilaAux.get(TOPE - 1);
+                actualizarVariableTS(obtenerTablaActual(), id.getValue(), T.getValue());
+                incrementarDesplazamiento(desplazamiento(T.getValue()));
+            break;
+            case 46:
+                // L -> lambda ; Se utiliza para llamar a funciones sin parametros, por eso debe ser tipo void y no vacio.
+                pilaAux.get(TOPE).setValue("void");
+            break;
         }
+        System.out.println("DEBUG: Despues de accion semantica " + codigoAccion + ", pilaAux: " + pilaAux);
     }
 
     private void actualizarVariableTS(TablaSimbolos tabla, String pos, String tipo) {
-        // TODO
+        int desplazamiento = compilador.getEtiquetaActual().equals("GLOBAL") ? desplazamientoGlobal : desplazamientoLocal;
+        tabla.actualizarVariable(Integer.parseInt(pos), tipo, desplazamiento);
     }
-    private void actualizarFuncionTS() {
-        // TODO
+    private void actualizarFuncionTS(TablaSimbolos tabla, String pos, String tiposP, String tipoR, String etiqueta) {
+        tabla.actualizarFuncion(Integer.parseInt(pos), tiposP, tipoR, etiqueta);
     }
     private int desplazamiento(String tipo) {
         switch (tipo) {
@@ -444,7 +453,7 @@ public class AnalizadorSemantico {
     }
 
     private void incrementarDesplazamiento(int incremento) {
-        if (etiquetaTablaActual.equals("global")) {
+        if (compilador.getEtiquetaActual().equals("GLOBAL")) {
             desplazamientoGlobal += incremento;
         } else {
             desplazamientoLocal -= incremento;
@@ -452,34 +461,37 @@ public class AnalizadorSemantico {
     }
 
     private TablaSimbolos obtenerTablaActual() {
-        if (etiquetaTablaActual.equals("global")) {
-            return tablaSimbolosGlobal;
+        if (compilador.getEtiquetaActual().equals("GLOBAL")) {
+            return compilador.getTablaGlobal();
         } else {
-            return tablaSimbolosLocal;
+            return compilador.getTablaLocal();
         }
     }
 
-    private String buscarTipo(String pos, TablaSimbolos tabla) {
-        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
-        if (s == null) {
-            return null;
-        }
+    private String buscarTipo(String pos) {
+        TablaSimbolos.Simbolo s = null;
+        if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+            s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
+        if (s == null)
+            s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
         return s.getTipo();
     }
 
-    private String buscarParametros(String pos, TablaSimbolos tabla) {
-        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
-        if (s == null) {
-            return null;
-        }
+    private String buscarParametros(String pos) {
+        TablaSimbolos.Simbolo s = null;
+        if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+            s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
+        if (s == null)
+            s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
         return s.getTiposParams();
     }
 
-    private String buscarTipoRetorno(String pos, TablaSimbolos tabla) {
-        TablaSimbolos.Simbolo s = tabla.getSimbolo(Integer.valueOf(pos));
-        if (s == null) {
-            return null;
-        }
+    private String buscarTipoRetorno(String pos) {
+        TablaSimbolos.Simbolo s = null;
+        if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+            s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
+        if (s == null)
+            s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
         return s.getTipoRetorno();
     }
     
@@ -490,7 +502,8 @@ public class AnalizadorSemantico {
 
     // Condición de análisis semántico correcto
     public boolean auxEsP1() {
-        return pilaAux.size() == 1 && pilaAux.get(0).getKey().equals("P1")
-                && pilaAux.get(0).getValue().equals("tipo_ok");
+        System.out.println("DEBUG: auxEsP1 "+ pilaAux.toString());
+        return pilaAux.size() == 1 && "P1".equals(pilaAux.get(0).getKey())
+                && "tipo_ok".equals(pilaAux.get(0).getValue());
     }
 }

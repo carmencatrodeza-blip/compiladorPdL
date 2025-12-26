@@ -1,104 +1,38 @@
-import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.AbstractMap.SimpleEntry;
 
 public class Main {
     public static void main(String[] args) {
-        
-        String dirPrueba = "src\\PIdG33.txt";
-        
-        // Prueba del Analizador Léxico
-        FileReader fr = abrirArchivo(dirPrueba);
-        if (fr != null) {
-            AnalizadorLexico lexico = new AnalizadorLexico(fr);
-            pruebaLexico(lexico);
-            cerrarArchivo(fr);
-        }
-        
-        // Prueba del Analizador Sintáctico
-        fr = abrirArchivo(dirPrueba);
-        if (fr != null) {
-            AnalizadorSintactico sintactico = new AnalizadorSintactico(new AnalizadorLexico(fr));
-            pruebaSintactico(sintactico);
-            cerrarArchivo(fr);
-        }
-    }
+        String ruta = "src\\PIdG33.txt";
+        Compilador compilador = new Compilador();
+        // Limpiar archivos con resultados de otras ejecuciones.
+        compilador.getWriter().write("", "tokens");
+        compilador.getWriter().write("", "tabla");
+        compilador.getWriter().write("", "parse");
+        FileReader fr = null;
 
-    private static FileReader abrirArchivo(String ruta) {
         try {
-            return new FileReader(ruta);
+            fr = new FileReader(ruta);
         } catch (FileNotFoundException fnf) {
-            GestorErrores.obtenerInstancia().mostrarError(1);
-            return null;
+            compilador.getGestorErrores().mostrarError(1);
         }
-    }
 
-    private static void cerrarArchivo(FileReader fr) {
+        AnalizadorLexico lexico = new AnalizadorLexico(compilador, fr);
+        AnalizadorSemantico semantico = new AnalizadorSemantico(compilador);
+        AnalizadorSintactico sintactico = new AnalizadorSintactico(compilador, lexico, semantico);
+
+        String resultadoParse = sintactico.parse();
+        compilador.getWriter().write("descendente " + resultadoParse, "parse");
+        if(!compilador.getErrorDetectado())
+            System.out.println("\033[32mAnálisis completado, el fichero fuente es correcto.\033[0m");
+
         try {
             if (fr != null) {
                 fr.close();
             }
         } catch (IOException e) {
-            GestorErrores.obtenerInstancia().mostrarError(6);
-        }
-    }
-
-    private static void pruebaLexico(AnalizadorLexico lexico) {
-        boolean fin = false;
-
-        try (BufferedWriter out = new BufferedWriter(new FileWriter("tokens.txt"))) {
-            while (!fin) {
-                SimpleEntry<String, Object> par = lexico.sigToken();
-
-                if (par == null) {
-                    System.err.println("\033[31mSe detiene el análisis por error léxico previo.\033[0m");
-                    escribirTabla(lexico);
-                    fin = true;
-                } else {
-                    try {
-                        Token tok = Token.fromEntry(par);
-                        out.write(tok.toString());
-                        out.flush();
-                    } catch (IOException e) {
-                        GestorErrores.obtenerInstancia().mostrarError(3);
-                        escribirTabla(lexico);
-                        break;
-                    }
-                    escribirTabla(lexico);
-
-                    if ("EOF".equals(par.getKey())) {
-                        System.out.println("\033[32mLectura de fichero terminada.\033[0m");
-                        fin = true;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            GestorErrores.obtenerInstancia().mostrarError(3);
-            escribirTabla(lexico);
-        }
-    }
-
-    private static void pruebaSintactico(AnalizadorSintactico sintactico) {
-        String resultadoParse = sintactico.parse();
-
-        try (BufferedWriter out = new BufferedWriter(new FileWriter("parse.txt"))) {
-            out.write("descendente " + resultadoParse);
-            out.flush();
-            System.out.println("\033[32mParse completado. Resultado guardado en parse.txt.\033[0m");
-        } catch (IOException e) {
-            GestorErrores.obtenerInstancia().mostrarError(5);
-        }
-    }
-
-    private static void escribirTabla(AnalizadorLexico lexico) {
-        try (BufferedWriter ts = new BufferedWriter(new FileWriter("tablaSimbolos.txt"))) {
-            ts.write(lexico.getTablaSimbolos().toString());
-            ts.flush();
-        } catch (IOException e) {
-            GestorErrores.obtenerInstancia().mostrarError(4);
+            compilador.getGestorErrores().mostrarError(6);
         }
     }
 }

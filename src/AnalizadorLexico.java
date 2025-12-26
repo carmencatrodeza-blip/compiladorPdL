@@ -39,8 +39,7 @@ enum CaracterEspecial {
 }
 
 public class AnalizadorLexico {
-
-	private int linea; // Número de línea del documento.
+	private final Compilador compilador;
 	private int estado; // Estado del autómata.
 	private String lexema; // Variable para construir el lexema.
 	private int contador; // Contador de caracteres leídos.
@@ -49,19 +48,18 @@ public class AnalizadorLexico {
 	private int caracter; // Caracter guardado como byte.
 	private CaracterEspecial ce; // Caracter especial actual.
 	private FileReader fr; // Lector de archivos.
-	private Set<String> palabrasReservadas; 
-	private TablaSimbolos tablaSimbolos;
+	private Set<String> palabrasReservadas;
 
-	public AnalizadorLexico(FileReader fr) {
+	public AnalizadorLexico(Compilador compilador, FileReader fr) {
+		this.compilador = compilador;
 		this.fr = fr;
-		linea = 1;
-		tablaSimbolos = new TablaSimbolos();
 		inicializarSetSimbolosReservados();
 		try{
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe){
-			GestorErrores.obtenerInstancia().mostrarError(2);
+			compilador.lanzarError();
+			compilador.getGestorErrores().mostrarError(2);
 		}
 	}
 
@@ -78,7 +76,7 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else if(ce == CaracterEspecial.SALTO_LINEA){
-					linea++;
+					compilador.incrementarLinea();
 					leerCaracter();
 				}
 				else if(esLetra(caracter)){
@@ -107,7 +105,8 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 			else if(ce == CaracterEspecial.BARRA_INV){
-				GestorErrores.obtenerInstancia().mostrarError(104, linea, (char)caracter, null);
+				compilador.lanzarError();
+				compilador.getGestorErrores().mostrarError(104, compilador.getLinea(), (char)caracter, null);
 				return null;
 				}
 				else if(ce == CaracterEspecial.IGUAL){
@@ -120,38 +119,47 @@ public class AnalizadorLexico {
 				}
 				else if(ce == CaracterEspecial.PAR_IZQ){
 					leerCaracter();
+					compilador.getWriter().write("< parIzq , >", "tokens");
 					return new SimpleEntry<>("parIzq", null);
 				}
 				else if(ce == CaracterEspecial.PAR_DER){
 					leerCaracter();
+					compilador.getWriter().write("< parDer , >", "tokens");
 					return new SimpleEntry<>("parDer", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_IZQ){
 					leerCaracter();
+					compilador.getWriter().write("< llaveIzq , >", "tokens");
 					return new SimpleEntry<>("llaveIzq", null);
 				}
 				else if(ce == CaracterEspecial.LLAVE_DER){
 					leerCaracter();
+					compilador.getWriter().write("< llaveDer , >", "tokens");
 					return new SimpleEntry<>("llaveDer", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO_Y_COMA){
 					leerCaracter();
+					compilador.getWriter().write("< puntoComa , >", "tokens");
 					return new SimpleEntry<>("puntoComa", null);
 				}
 				else if(ce == CaracterEspecial.COMA){
 					leerCaracter();
+					compilador.getWriter().write("< coma , >", "tokens");
 					return new SimpleEntry<>("coma", null);
 				}
 				else if(ce == CaracterEspecial.PUNTO){
 					// ! Necesito imprimir " .55 " y corto al leer el punto
-					GestorErrores.obtenerInstancia().mostrarError(102, linea, (char)caracter, null);
+					compilador.lanzarError();
+					compilador.getGestorErrores().mostrarError(102, compilador.getLinea(), (char)caracter, null);
 					return null;
 				}
 				else if(caracter == -1){
+					compilador.getWriter().write("< EOF , >", "tokens");
 					return new SimpleEntry<>("EOF", null);
 				}
 				else{
-					GestorErrores.obtenerInstancia().mostrarError(101, linea, (char)caracter, null);
+					compilador.lanzarError();
+					compilador.getGestorErrores().mostrarError(101, compilador.getLinea(), (char)caracter, null);
 					return null;
 				}
 				break;
@@ -167,13 +175,15 @@ public class AnalizadorLexico {
 				}
 				else{
 					if(!esReservada(lexema).equals("noEsReservada")){
+						compilador.getWriter().write("< " + lexema + " , >", "tokens");
 						return new SimpleEntry<>(lexema, null);
 					}
 					else{
-						int pos = tablaSimbolos.contieneId(lexema);
+						int pos = compilador.getTablaActual().contieneId(lexema);
 						if(pos == -1){
-							pos = tablaSimbolos.addSimbolo(lexema);
+							pos = compilador.getTablaActual().addSimbolo(lexema);
 						}
+						compilador.getWriter().write("< id , " + pos + " >", "tokens");
 						return new SimpleEntry<>("id", pos);
 					}
 				}
@@ -184,10 +194,11 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					int pos = tablaSimbolos.contieneId(lexema);
+					int pos = compilador.getTablaActual().contieneId(lexema);
 					if(pos == -1){
-						pos = tablaSimbolos.addSimbolo(lexema);
+						pos = compilador.getTablaActual().addSimbolo(lexema);
 					}
+					compilador.getWriter().write("< id , " + pos + " >", "tokens");
 					return new SimpleEntry<>("id", pos);
 				}
 				break;
@@ -204,9 +215,11 @@ public class AnalizadorLexico {
 				}
 				else{
 				if (numero > 32767){
-					GestorErrores.obtenerInstancia().mostrarError(106, linea, (char)caracter, lexema);
+					compilador.lanzarError();
+					compilador.getGestorErrores().mostrarError(106, compilador.getLinea(), (char)caracter, lexema);
 					return null;
 					}
+					compilador.getWriter().write("< entero , " + (int)numero + " >", "tokens");
 					return new SimpleEntry<>("entero", (int)numero);
 				}
 				break;
@@ -219,7 +232,8 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					GestorErrores.obtenerInstancia().mostrarError(103, linea, (char)caracter, lexema);
+					compilador.lanzarError();
+					compilador.getGestorErrores().mostrarError(103, compilador.getLinea(), (char)caracter, lexema);
 					return null;
 				}
 				break;
@@ -233,10 +247,12 @@ public class AnalizadorLexico {
 				else{
 					double output = calcularValor();
 					if (output > 117549436.0f){
-						GestorErrores.obtenerInstancia().mostrarError(107, linea, (char)caracter, lexema);
+						compilador.lanzarError();
+						compilador.getGestorErrores().mostrarError(107, compilador.getLinea(), (char)caracter, lexema);
 						return null;
 					}
-					return new SimpleEntry<>("real", calcularValor());
+					compilador.getWriter().write("< real , " + output + " >", "tokens");
+					return new SimpleEntry<>("real", output);
 				}
 				break;
 			case 6:
@@ -244,9 +260,11 @@ public class AnalizadorLexico {
 					lexema += (char)caracter;
 					leerCaracter();
 					if (contador > 64) {
-						GestorErrores.obtenerInstancia().mostrarError(108, linea, (char)caracter, lexema);
+						compilador.lanzarError();
+						compilador.getGestorErrores().mostrarError(108, compilador.getLinea(), (char)caracter, lexema);
 						return null;
 					}
+					compilador.getWriter().write("< cadena , " + lexema + " >", "tokens");
 					return new SimpleEntry<>("cadena", lexema);
 				}
 				else if (ce == CaracterEspecial.BARRA_INV) {
@@ -274,19 +292,22 @@ public class AnalizadorLexico {
 				}
 				else if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
+					compilador.getWriter().write("< asigDiv , >", "tokens");
 					return new SimpleEntry<>("asigDiv", null);
 				}
 				else {
+					compilador.getWriter().write("< div , >", "tokens");
 					return new SimpleEntry<>("div", null);
 				}
 				break;
 			case 9:
 				if (ce == CaracterEspecial.SALTO_LINEA) {
-					linea++;
+					compilador.incrementarLinea();
 					estado = 0;
 					leerCaracter();
 				}
 				else if (caracter == -1) {
+					compilador.getWriter().write("< EOF , >", "tokens");
 					return new SimpleEntry<>("EOF", null);
 				}
 				else {
@@ -296,18 +317,22 @@ public class AnalizadorLexico {
 			case 10:
 				if (ce == CaracterEspecial.IGUAL) {
 					leerCaracter();
+					compilador.getWriter().write("< igual , >", "tokens");
 					return new SimpleEntry<>("igual", null);
 				}
 				else {
+					compilador.getWriter().write("< asig , >", "tokens");
 					return new SimpleEntry<>("asig", null);
 				}
 			case 11:
 				if(ce == CaracterEspecial.Y) {
 					leerCaracter();
+					compilador.getWriter().write("< y , >", "tokens");
 					return new SimpleEntry<>("y", null);
 				}
 				else {
-					GestorErrores.obtenerInstancia().mostrarError(105, linea, (char)caracter, null);
+					compilador.lanzarError();
+					compilador.getGestorErrores().mostrarError(105, compilador.getLinea(), (char)caracter, null);
 					return null;
 				}
 			}
@@ -319,7 +344,8 @@ public class AnalizadorLexico {
 			caracter = fr.read();
 			ce = CaracterEspecial.fromAscii(caracter);
 		} catch (IOException ioe) {
-			GestorErrores.obtenerInstancia().mostrarError(2);
+			compilador.lanzarError();
+			compilador.getGestorErrores().mostrarError(2);
 		}
 	}
 
@@ -342,16 +368,4 @@ public class AnalizadorLexico {
 	}
 
 	private String esReservada(String s) { return (palabrasReservadas.contains(s)) ? s : "noEsReservada"; }
-	
-	//public void inicializarTablaSimbolosReservados() {
-		//String[] reservadas = {"boolean","float","function","if","int","let","read","return","string","void","while","write"};
-		//for (String s : reservadas) {
-			//this.tablaSimbolos.addSimbolo(s);
-		//}
-	//}
-
-	public TablaSimbolos getTablaSimbolos() { return tablaSimbolos; }
-
-	public int getLinea() { return linea; }
-
 }

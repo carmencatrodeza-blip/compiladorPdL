@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.Stack;
 
 public class AnalizadorSintactico {
-    
+    private final Compilador compilador;
     private final AnalizadorLexico lexico;
     private final AnalizadorSemantico semantico;
     private Stack<String> pila;
@@ -13,12 +13,16 @@ public class AnalizadorSintactico {
     private Map<String, String> nombresTerminales; // nombre token -> nombre terminal
     private String parse;
     private String tokenActual; // Código del token actual traducido a terminal
-    private String lexemaActual; // Valor del token leído
-    private String lexemaAnterior; // Valor del token anterior
+    private String simboloActual; // Símbolo del token leído (key de sigToken)
+    private Object atributoActual; // Atributo del token leído (value de sigToken)
+    private String lexemaActual; // Lexema literal del token leído (palabra del código fuente)
+    private String lexemaAnterior; // Lexema literal del token anterior
+    private final GestorErrores gestorErrores = new GestorErrores();
 
-    public AnalizadorSintactico(AnalizadorLexico lexico) {
+    public AnalizadorSintactico(Compilador compilador, AnalizadorLexico lexico, AnalizadorSemantico semantico) {
+        this.compilador = compilador;
         this.lexico = lexico;
-        this.semantico = AnalizadorSemantico.obtenerInstancia();
+        this.semantico = semantico;
         inicializarPila();
         inicializarTabla();
         inicializarSetTerminales();
@@ -36,19 +40,21 @@ public class AnalizadorSintactico {
                 int accion = Integer.parseInt(topePila.substring(1, topePila.length()-1));
                 semantico.accionSemantica(accion);
                 pila.pop();
-            } else if (terminales.contains(topePila)) {
+            } else if (terminales.contains(topePila)) { // Terminal
                 if (topePila.equals(tokenActual)) {
                     String simbolo = pila.pop();
-                    semantico.pushToAux(simbolo, lexemaActual); // Asumir método en semántico
+                    System.out.println("DEBUG: simbolo = " + simbolo + ", atributo = " + (atributoActual != null ? atributoActual.toString() : "null") + ", lexema = " + lexemaActual);
+                    if (!simbolo.equals("$"))
+                        semantico.pushToAux(simbolo, obtenerAtributoParaTerminal(simbolo));
                     lexemaAnterior = lexemaActual;
                     tokenActual = leerSiguienteToken();
                 } else {
-                    GestorErrores.obtenerInstancia().mostrarError(201,
-                        lexico.getLinea(), topePila, tokenActual, lexemaAnterior, null);
+                    compilador.lanzarError();
+                    gestorErrores.mostrarError(201,
+                        compilador.getLinea(), topePila, tokenActual, lexemaAnterior, null);
                     return "0";
                 }
-            } else {
-                // No terminal
+            } else { // No terminal
                 HashMap<String, String> reglas = tabla.get(topePila);
                 if (reglas != null && reglas.containsKey(tokenActual)) {
                     String simbolo = pila.pop();
@@ -59,27 +65,27 @@ public class AnalizadorSintactico {
                     String produccion = regla.substring(regla.indexOf('.') + 1);
                     String[] simbolos = produccion.split(" ");
                     for (int i = simbolos.length - 1; i >= 0; i--) {
-                        if(!simbolos[i].equals("lambda"))
-                            pila.push(simbolos[i]);
+                        pila.push(simbolos[i]);
                     }
                 } else {
                     Map<String,String> posibles = tabla.get(topePila);
                     String esperados = "";
                     for (String s : posibles.keySet()) esperados += "'" + s + "', ";
                     esperados = esperados.substring(0, esperados.length()-2);
-                    GestorErrores.obtenerInstancia().mostrarError(202,
-                        lexico.getLinea(), topePila, tokenActual, lexemaAnterior, esperados);
+                    compilador.lanzarError();
+                    gestorErrores.mostrarError(202,
+                        compilador.getLinea(), topePila, tokenActual, lexemaAnterior, esperados);
                     return "0";
                 }
             }
         }
 
         if (tokenActual.equals("$") && semantico.auxEsP1()) {
-            System.out.println("\033[32mAnálisis sintáctico y semántico completado con éxito.\033[0m");
             return parse.substring(0, parse.length()-1);
         } else {
-            GestorErrores.obtenerInstancia().mostrarError(201,
-                lexico.getLinea(), "$", tokenActual, lexemaAnterior, null);
+            compilador.lanzarError();
+            gestorErrores.mostrarError(201,
+                compilador.getLinea(), "fin de fichero", tokenActual, lexemaAnterior, null);
             return "0";
         }
     }
@@ -88,7 +94,7 @@ public class AnalizadorSintactico {
     private void inicializarPila() {
         pila = new Stack<>();
         pila.push("$");
-        pila.push("P"); // Símbolo de inicio
+        pila.push("P1"); // Símbolo de inicio
     }
 
     // Inicializa el conjunto de terminales del lenguaje.
@@ -148,11 +154,11 @@ public class AnalizadorSintactico {
         reglasP.put("while", "2.B P {14} {2}");
         reglasP.put("write", "2.B P {14} {2}");
         reglasP.put("id", "2.B P {14} {2}");
-        reglasP.put("$", "4.lambda {16}");
+        reglasP.put("$", "4.{16}");
         tabla.put("P", reglasP);
 
         HashMap<String, String> reglasB = new HashMap<>();
-        reglasB.put("if", "7.if ( E ) S  {26} {5}");
+        reglasB.put("if", "7.if ( E ) S {26} {5}");
         reglasB.put("let", "8.let {8} T id {6} {27} ; {4}");
         reglasB.put("read", "5.S {17} {1}");
         reglasB.put("return", "5.S {17} {1}");
@@ -187,23 +193,23 @@ public class AnalizadorSintactico {
         tabla.put("H", reglasH);
 
         HashMap<String, String> reglasT = new HashMap<>();
-        reglasT.put("boolean", "19.boolean");
-        reglasT.put("float", "20.float");
-        reglasT.put("int", "22.int");
-        reglasT.put("string", "21.string");
+        reglasT.put("boolean", "19.boolean {20} {1}");
+        reglasT.put("float", "20.float {22} {1}");
+        reglasT.put("int", "22.int {21} {1}");
+        reglasT.put("string", "21.string {23} {1}");
         tabla.put("T", reglasT);
 
         HashMap<String, String> reglasA = new HashMap<>();
-        reglasA.put("boolean", "23.T id K {33} {3}");
-        reglasA.put("float", "23.T id K {33} {3}");
-        reglasA.put("int", "23.T id K {33} {3}");
-        reglasA.put("string", "23.T id K {33} {3}");
+        reglasA.put("boolean", "23.T id {45} K {33} {3}");
+        reglasA.put("float", "23.T id {45} K {33} {3}");
+        reglasA.put("int", "23.T id {45} K {33} {3}");
+        reglasA.put("string", "23.T id {45} K {33} {3}");
         reglasA.put("void", "24.void {24} {1}");
         tabla.put("A", reglasA);
 
         HashMap<String, String> reglasK = new HashMap<>();
-        reglasK.put(")", "26.lambda {16}");
-        reglasK.put(",", "25., T id K {34} {4}");
+        reglasK.put(")", "26.{16}");
+        reglasK.put(",", "25., T id {45} K {34} {4}");
         tabla.put("K", reglasK);
 
         HashMap<String, String> reglasC = new HashMap<>();
@@ -213,7 +219,7 @@ public class AnalizadorSintactico {
         reglasC.put("return", "27.B C {35} {2}");
         reglasC.put("while", "27.B C {35} {2}");
         reglasC.put("write", "27.B C {35} {2}");
-        reglasC.put("}", "28.lambda {16}");
+        reglasC.put("}", "28.{16}");
         reglasC.put("id", "27.B C {35} {2}");
         tabla.put("C", reglasC);
 
@@ -227,9 +233,9 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasE1 = new HashMap<>();
         reglasE1.put("&&", "30.&& R E1 {37} {3}");
-        reglasE1.put(")", "31.lambda {16}");
-        reglasE1.put(",", "31.lambda {16}");
-        reglasE1.put(";", "31.lambda {16}");
+        reglasE1.put(")", "31.{16}");
+        reglasE1.put(",", "31.{16}");
+        reglasE1.put(";", "31.{16}");
         tabla.put("E1", reglasE1);
 
         HashMap<String, String> reglasR = new HashMap<>();
@@ -242,10 +248,10 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasR1 = new HashMap<>();
         reglasR1.put("==", "33.== U R1 {39} {3}");
-        reglasR1.put("&&", "34.lambda {16}");
-        reglasR1.put(")", "34.lambda {16}");
-        reglasR1.put(",", "34.lambda {16}");
-        reglasR1.put(";", "34.lambda {16}");
+        reglasR1.put("&&", "34.{16}");
+        reglasR1.put(")", "34.{16}");
+        reglasR1.put(",", "34.{16}");
+        reglasR1.put(";", "34.{16}");
         tabla.put("R1", reglasR1);
         
         HashMap<String, String> reglasU = new HashMap<>();
@@ -258,11 +264,11 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasU1 = new HashMap<>();
         reglasU1.put("/", "36./ V U1 {41} {3}");
-        reglasU1.put("==", "37.lambda {16}"); 
-        reglasU1.put("&&", "37.lambda {16}");
-        reglasU1.put(")", "37.lambda {16}");
-        reglasU1.put(",", "37.lambda {16}");
-        reglasU1.put(";", "37.lambda {16}");
+        reglasU1.put("==", "37.{16}"); 
+        reglasU1.put("&&", "37.{16}");
+        reglasU1.put(")", "37.{16}");
+        reglasU1.put(",", "37.{16}");
+        reglasU1.put(";", "37.{16}");
         tabla.put("U1", reglasU1);
 
         HashMap<String, String> reglasV = new HashMap<>();
@@ -275,17 +281,17 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasV1 = new HashMap<>();
         reglasV1.put("(", "43.( L {18} ) {3}");
-        reglasV1.put(")", "44.lambda {16}");
-        reglasV1.put("/", "44.lambda {16}");
-        reglasV1.put("==", "44.lambda {16}");
-        reglasV1.put("&&", "44.lambda {16}");
-        reglasV1.put(",", "44.lambda {16}");
-        reglasV1.put(";", "44.lambda {16}");
+        reglasV1.put(")", "44.{16}");
+        reglasV1.put("/", "44.{16}");
+        reglasV1.put("==", "44.{16}");
+        reglasV1.put("&&", "44.{16}");
+        reglasV1.put(",", "44.{16}");
+        reglasV1.put(";", "44.{16}");
         tabla.put("V1", reglasV1);
 
         HashMap<String, String> reglasX = new HashMap<>();
         reglasX.put("(", "45.E {17} {1}");
-        reglasX.put(";", "46.lambda {16}");
+        reglasX.put(";", "46.{16}");
         reglasX.put("id", "45.E {17} {1}");
         reglasX.put("entero", "45.E {17} {1}");
         reglasX.put("real", "45.E {17} {1}");
@@ -294,7 +300,7 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasL = new HashMap<>();
         reglasL.put("(", "47.E Q {43} {2}");
-        reglasL.put(")", "48.lambda {16}");
+        reglasL.put(")", "48.{46}");
         reglasL.put("id", "47.E Q {43} {2}");
         reglasL.put("entero", "47.E Q {43} {2}");
         reglasL.put("real", "47.E Q {43} {2}");
@@ -302,27 +308,51 @@ public class AnalizadorSintactico {
         tabla.put("L", reglasL);
 
         HashMap<String, String> reglasQ = new HashMap<>();
-        reglasQ.put(")", "50.lambda {16}");
+        reglasQ.put(")", "50.{16}");
         reglasQ.put(",", "49., E Q {44} {3}");
         tabla.put("Q", reglasQ);
     }
 
     private String leerSiguienteToken() {
         Map.Entry<String,Object> t = lexico.sigToken();
-        String nombreToken = t.getKey();
-        Object lexema = t.getValue();
-        String terminal = traducirTokenATerminal(nombreToken);
-        // Guardar la palabra real leída o el símbolo terminal si no hay lexema
-        lexemaActual = obtenerLexema(lexema, nombreToken);
+        simboloActual = t.getKey();
+        atributoActual = t.getValue();
+        String terminal = traducirTokenATerminal(simboloActual);
+        // Obtener el lexema literal
+        lexemaActual = obtenerLexemaLiteral(simboloActual, atributoActual);
 
         return terminal;
     }
 
-    private String obtenerLexema(Object lexema, String token) {
-        if ("id".equals(token) && lexema instanceof Integer) {
-            return lexico.getTablaSimbolos().getId((Integer)lexema);
-        }  
-        return (lexema != null) ? lexema.toString() : traducirTokenATerminal(token);
+    // Obtiene el lexema literal (palabra del código fuente) del token
+    private String obtenerLexemaLiteral(String simbolo, Object atributo) {
+        if (simbolo.equals("id")) {
+            // Para ids, el atributo es la posición en la tabla de símbolos
+            int posicion = Integer.parseInt(atributo.toString());
+            return compilador.getTablaActual().getId(posicion);
+        } else if (atributo != null) {
+            // Para literales, el atributo es el valor literal
+            return atributo.toString();
+        } else {
+            // Para tokens sin atributo, devolver el símbolo terminal
+            return traducirTokenATerminal(simbolo);
+        }
+    }
+    
+    // Obtiene el atributo para el terminal en pilaAux
+    private String obtenerAtributoParaTerminal(String simbolo) {
+        switch (simbolo) {
+            case "function": return "funcion";
+            case "void": return "void";
+            case "boolean": return "logico";
+            case "float": return "real";
+            case "int": return "entero";
+            case "string": return "cadena";
+            case "entero": return "entero";
+            case "real": return "real";
+            case "cadena": return "cadena";
+            default: return atributoActual != null ? atributoActual.toString() : null;
+        }
     }
     
 }

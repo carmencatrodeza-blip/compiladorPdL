@@ -152,9 +152,9 @@ T -> boolean {T.tipo = logico; T.ancho = 4}
 T -> float {T.tipo = real; T.ancho = 8}
 T -> string {T.tipo = cadena; T.ancho = 128}
 T -> int {T.tipo = entero; T.ancho = 4}
-A -> T id K {A.tipo:=if(K.tipo=vacio) then T.tipo else T.tipo x K.tipo}
+A -> T id {actualizarVariableTS(TSL, id.pos, T.tipo)} K {A.tipo:=if(K.tipo=vacio) then T.tipo else T.tipo x K.tipo}
 A -> void {A.tipo = void}
-K -> , T id K {K.tipo:=if(Ka.tipo=vacio) then T.tipo else T.tipo x Ka.tipo}
+K -> , T id {actualizarVariableTS(TSL, id.pos, T.tipo)} K {K.tipo:=if(Ka.tipo=vacio) then T.tipo else T.tipo x Ka.tipo}
 K -> lambda {K.tipo:=vacio}
 C -> B C {C.tipo := if (B.tipo = tipo_error OR Ca.tipo = tipo_error) then tipo_error else if (B.tipo = ret(T)) then ret(T) else if (Ca.tipo = vacio) then B.tipo else Ca.tipo}
 C -> lambda {C.tipo:=vacio}
@@ -201,7 +201,7 @@ TRADUCCION A TERMINOS DE PILA
 16. {AUX[tope].tipo=vacio}
 17. {AUX[tope-1].tipo:=AUX[tope].tipo}
 18. {AUX[tope-2].tipo:=AUX[tope].tipo}
-19. {AUX[tope-1].tipo := ret(AUX[tope].tipo)}
+19. {AUX[tope-2].tipo := ret(AUX[tope].tipo)}
 20. {AUX[tope-1].tipo:=logico}
 21. {AUX[tope-1].tipo:=entero}
 22. {AUX[tope-1].tipo:=real}
@@ -227,6 +227,8 @@ TRADUCCION A TERMINOS DE PILA
 42. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then buscarTipo(AUX[tope-1].pos) else if(buscarTipo(AUX[tope-1].pos)=function AND getParams(AUX[tope-1].pos)=AUX[tope].tipo) then retTipo(AUX[tope-1].pos) else tipo_error}
 43. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
 44. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
+45. {actualizarVariableTS(TSL, AUX[TOPE].pos, AUX[TOPE-1].tipo)}
+46. {AUX[tope].tipo:=void}
 
 EdT CON REGLAS TRADUCIDAS A PILA
 
@@ -236,7 +238,7 @@ P -> F P {15} {2}
 P -> lambda {16}
 B -> S {17} {1}
 B -> while ( E ) { C {25} } {7}
-B -> if ( E ) S  {26} {5}
+B -> if ( E ) S {26} {5}
 B -> let {8} T id {6} {27} ; {4}
 S -> id S1 {28} {2}
 S -> write E {29} ; {3} 
@@ -252,9 +254,9 @@ T -> boolean {20} {1}
 T -> float {22} {1}
 T -> string {23} {1}
 T -> int {21} {1}
-A -> T id K {33} {3}
+A -> T id {45} K {33} {3}
 A -> void {24} {1}
-K -> , T id K {34} {4}
+K -> , T id {45} K {34} {4}
 K -> lambda {16}
 C -> B C {35} {2}
 C -> lambda {16}
@@ -277,6 +279,6 @@ V1 -> lambda {16}
 X -> E {17} {1}
 X -> lambda {16}
 L -> E Q {43} {2}
-L -> lambda {16}
+L -> lambda {46}
 Q -> , E Q {44} {3}
 Q -> lambda {16}

@@ -1,16 +1,8 @@
 public class GestorErrores {
-    
-    private final static GestorErrores instancia = new GestorErrores();
-	private static final String ROJO = "\033[31m";
-	private static final String BLANCO = "\033[0m";
-	private static String output = "";
-    
-    private GestorErrores() {
-    }
-    
-    public static GestorErrores obtenerInstancia() {
-        return instancia;
-    }
+
+	private final String ROJO = "\033[31m";
+	private final String BLANCO = "\033[0m";
+	private String output = "";
 
 	// Mensajes de error genéricos
 	public void mostrarError(int codigo){

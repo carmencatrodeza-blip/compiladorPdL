@@ -91,8 +91,20 @@ public class TablaSimbolos {
 
     public void actualizarVariable(int pos, String tipo, int desplazamiento) {
         Simbolo s = getSimbolo(pos);
+        System.out.println("DEBUG: TS antes de introducir variable: " + this.getId(pos) + "\n" + this.toString());
         s.setTipo(tipo);
         s.setDesplazamiento(desplazamiento);
+        System.out.println("DEBUG: TS despues de introducir variable: " + this.getId(pos) + "\n" + this.toString());
+    }
+
+    public void actualizarFuncion(int pos, String tiposP, String tipoRetorno, String etiqueta) {
+        Simbolo s = getSimbolo(pos);
+        System.out.println("DEBUG: TS antes de introducir variable: " + this.getId(pos) + "\n" + this.toString());
+        int n = tiposP.split(",").length;
+        s.setTipo("funcion");
+        s.setParametros(n, tiposP, null, tipoRetorno); // ! Modo de paso parametros, no se que hacer.
+        s.setEtiqueta(etiqueta);
+        System.out.println("DEBUG: TS despues de introducir variable: " + this.getId(pos) + "\n" + this.toString());
     }
 
     @Override
@@ -121,7 +133,7 @@ public class TablaSimbolos {
             String[] tipos = s.getTiposParams().split(",");
             for (int i = 0; i < s.getNumParams(); i++) {
                 sb.append("    + tipoParam").append(i + 1).append(": ").append(tipos[i]).append("\n");
-                sb.append("    modoParam").append(i + 1).append(": ").append(s.getModosPasoParams()[i]).append("\n");
+                //sb.append("    modoParam").append(i + 1).append(": ").append(s.getModosPasoParams()[i]).append("\n");
             }
             sb.append("    + tipoRetorno: ").append(s.getTipoRetorno()).append("\n");
             sb.append("  + etiqueta: ").append(s.getEtiqueta()).append("\n");
