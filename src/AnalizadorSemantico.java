@@ -4,7 +4,6 @@ import java.util.ArrayList;
 public class AnalizadorSemantico {
     private final Compilador compilador;
     ArrayList<SimpleEntry<String, String>> pilaAux;
-    int desplazamientoGlobal;
     int desplazamientoLocal;
 
     public AnalizadorSemantico(Compilador compilador) {
@@ -76,7 +75,6 @@ public class AnalizadorSemantico {
                 pilaAux.subList(TOPE - 8, TOPE + 1).clear();
             break;
             case 10:
-                desplazamientoGlobal = 1;
             break;
             case 11:
                 compilador.setTablaLocal(new TablaSimbolos());
@@ -193,7 +191,7 @@ public class AnalizadorSemantico {
                 S = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE - 1);
                 S1 = pilaAux.get(TOPE);
-                if (buscarTipo(id.getValue()).equals(S1.getValue())) {
+                if (S1.getValue().equals(buscarTipo(id.getValue()))) {
                     S.setValue("tipo_ok");
                 } else if ("funcion".equals(buscarTipo(id.getValue())) &&
                             buscarParametros(id.getValue()).equals(S1.getValue())) {
@@ -201,9 +199,8 @@ public class AnalizadorSemantico {
                 } else if (buscarTipo(id.getValue()) == null &&
                             "entero".equals(S1.getValue())) {
                     S.setValue("tipo_ok");
-                    // tablaSimbolosGlobal.addSimbolo() // ! si no se ha declarado se añade a  TSG, creo que vamos a tener que cambiar como se añade desde el lexico.
-                    // actualizarVariableTS();
-                    // incrementarDesplazamiento();
+                    actualizarVariableTS(compilador.getTablaGlobal(), id.getValue(), "entero");
+                    incrementarDesplazamiento(desplazamiento("entero"));
                 } else {
                     S.setValue("tipo_error");
                 }
@@ -316,15 +313,14 @@ public class AnalizadorSemantico {
                 E1a = pilaAux.get(TOPE);
                 if ("vacio".equals(E1a.getValue())) {
                     E1.setValue(R.getValue());
-                } else if (("logico".equals(R.getValue()) || "entero".equals(R.getValue()) ||
-                            "real".equals(R.getValue())) && R.getValue().equals(E1a.getValue())) {
+                } else if ("logico".equals(R.getValue()) && R.getValue().equals(E1a.getValue())) {
                     E1.setValue(R.getValue());
                 } else {
                     E1.setValue("tipo_error");
                 }
             break;
             case 38:
-                // R -> U R1
+                // R -> U R1          entero == entero == entero
                 R = pilaAux.get(TOPE - 2);
                 U = pilaAux.get(TOPE - 1);
                 R1 = pilaAux.get(TOPE);
@@ -431,7 +427,7 @@ public class AnalizadorSemantico {
     }
 
     private void actualizarVariableTS(TablaSimbolos tabla, String pos, String tipo) {
-        int desplazamiento = compilador.getEtiquetaActual().equals("GLOBAL") ? desplazamientoGlobal : desplazamientoLocal;
+        int desplazamiento = compilador.getEtiquetaActual().equals("GLOBAL") ? compilador.getDesplazamientoGlobal() : desplazamientoLocal;
         tabla.actualizarVariable(Integer.parseInt(pos), tipo, desplazamiento);
     }
     private void actualizarFuncionTS(TablaSimbolos tabla, String pos, String tiposP, String tipoR, String etiqueta) {
@@ -454,7 +450,7 @@ public class AnalizadorSemantico {
 
     private void incrementarDesplazamiento(int incremento) {
         if (compilador.getEtiquetaActual().equals("GLOBAL")) {
-            desplazamientoGlobal += incremento;
+            compilador.incrementarDesplazamientoGlobal(incremento);
         } else {
             desplazamientoLocal -= incremento;
         }

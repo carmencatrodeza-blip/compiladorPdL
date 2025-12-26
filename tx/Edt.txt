@@ -218,8 +218,8 @@ TRADUCCION A TERMINOS DE PILA
 33. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-2].tipo else AUX[tope-2].tipo x AUX[tope].tipo}
 34. {AUX[tope-4].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-2].tipo else AUX[tope-2].tipo x AUX[tope].tipo}
 35. {AUX[tope-2].tipo := if (AUX[tope-1].tipo = tipo_error OR AUX[tope].tipo = tipo_error) then tipo_error else if (AUX[tope-1].tipo = ret({logico,entero,real,cadena})) then AUX[tope-1].tipo else if (AUX[tope].tipo = vacio) then AUX[tope-1].tipo else AUX[tope].tipo}
-36. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo=logico) then logico else tipo_error}
-37. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={ent, real, logico}) then AUX[tope-1].tipo else tipo_error}
+36. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo=logico) then AUX[tope-1].tipo else tipo_error}
+37. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={logico}) then logico.tipo else tipo_error}
 38. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero, logico}) then logico else tipo_error}
 39. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero, logico}) then AUX[tope-1].tipo else tipo_error}
 40. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio) then AUX[tope-1].tipo else if(AUX[tope-1].tipo=AUX[tope].tipo={real, entero}) then AUX[tope-1].tipo else tipo_error}

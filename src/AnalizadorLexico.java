@@ -179,9 +179,22 @@ public class AnalizadorLexico {
 						return new SimpleEntry<>(lexema, null);
 					}
 					else{
-						int pos = compilador.getTablaActual().contieneId(lexema);
+						int pos = -1;
+						// Si existe tabla local activa se busca primero allí.
+						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+							pos = compilador.getTablaActual().contieneId(lexema);
+						// Si la tabla activa es la global o no se encontró en la local se busca en la global.
+						if(pos == -1)
+							pos = compilador.getTablaGlobal().contieneId(lexema);
+						// Si no se encontró en ninguna es un nuevo id.
 						if(pos == -1){
-							pos = compilador.getTablaActual().addSimbolo(lexema);
+							if (compilador.getZonaDeclaracion()) // Se añade a la tabla activa.
+								pos = compilador.getTablaActual().addSimbolo(lexema);
+							else { // Declaración implícita.
+								pos = compilador.getTablaGlobal().addSimbolo(lexema);
+								compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
+								compilador.incrementarDesplazamientoGlobal(4);
+							}
 						}
 						compilador.getWriter().write("< id , " + pos + " >", "tokens");
 						return new SimpleEntry<>("id", pos);
@@ -194,10 +207,23 @@ public class AnalizadorLexico {
 					leerCaracter();
 				}
 				else{
-					int pos = compilador.getTablaActual().contieneId(lexema);
-					if(pos == -1){
-						pos = compilador.getTablaActual().addSimbolo(lexema);
-					}
+					int pos = -1;
+						// Si existe tabla local activa se busca primero allí.
+						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+							pos = compilador.getTablaActual().contieneId(lexema);
+						// Si la tabla activa es la global o no se encontró en la local se busca en la global.
+						if(pos == -1)
+							pos = compilador.getTablaGlobal().contieneId(lexema);
+						// Si no se encontró en ninguna es un nuevo id.
+						if(pos == -1){
+							if (compilador.getZonaDeclaracion()) // Se añade a la tabla activa.
+								pos = compilador.getTablaActual().addSimbolo(lexema);
+							else { // Declaración implícita.
+								pos = compilador.getTablaGlobal().addSimbolo(lexema);
+								compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
+								compilador.incrementarDesplazamientoGlobal(4);
+							}
+						}
 					compilador.getWriter().write("< id , " + pos + " >", "tokens");
 					return new SimpleEntry<>("id", pos);
 				}
