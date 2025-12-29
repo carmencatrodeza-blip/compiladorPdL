@@ -177,24 +177,22 @@ public class AnalizadorLexico {
 					if(!esReservada(lexema).equals("noEsReservada")){
 						compilador.getWriter().write("< " + lexema + " , >", "tokens");
 						return new SimpleEntry<>(lexema, null);
-					}
-					else{
+					} else {
 						int pos = -1;
-						// Si existe tabla local activa se busca primero allí.
+						// Si se está declarando, se añade a la tabla activa.
+						if (compilador.getZonaDeclaracion())
+							pos = compilador.getTablaActual().addSimbolo(lexema);
+						// Si existe tabla local activa, se busca primero allí.
 						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
 							pos = compilador.getTablaActual().contieneId(lexema);
-						// Si la tabla activa es la global o no se encontró en la local se busca en la global.
+						// Si la tabla activa es la global o no se encontró en la local, se busca en la global.
 						if(pos == -1)
 							pos = compilador.getTablaGlobal().contieneId(lexema);
-						// Si no se encontró en ninguna es un nuevo id.
-						if(pos == -1){
-							if (compilador.getZonaDeclaracion()) // Se añade a la tabla activa.
-								pos = compilador.getTablaActual().addSimbolo(lexema);
-							else { // Declaración implícita.
-								pos = compilador.getTablaGlobal().addSimbolo(lexema);
-								compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
-								compilador.incrementarDesplazamientoGlobal(4);
-							}
+						// Declaración implícita.
+						if(pos == -1){ 
+							pos = compilador.getTablaGlobal().addSimbolo(lexema);
+							compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
+							compilador.incrementarDesplazamientoGlobal(4);
 						}
 						compilador.getWriter().write("< id , " + pos + " >", "tokens");
 						return new SimpleEntry<>("id", pos);
@@ -205,8 +203,7 @@ public class AnalizadorLexico {
 				if(esLetra(caracter) || esDigito(caracter) || ce == CaracterEspecial.GUION_BAJO){
 					lexema += (char)caracter;
 					leerCaracter();
-				}
-				else{
+				} else {
 					int pos = -1;
 						// Si existe tabla local activa se busca primero allí.
 						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
@@ -361,6 +358,8 @@ public class AnalizadorLexico {
 					compilador.getGestorErrores().mostrarError(105, compilador.getLinea(), (char)caracter, null);
 					return null;
 				}
+			default:
+				return null;
 			}
 		}
 	}

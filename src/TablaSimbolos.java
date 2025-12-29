@@ -47,8 +47,13 @@ public class TablaSimbolos {
 
     // Usamos LinkedHashMap para conservar orden de inserción
     private final LinkedHashMap<String, Simbolo> tabla = new LinkedHashMap<>(); // identificador -> simbolo
+    private final int id;
     private int siguientePos = 1; 
     private String etiqueta;
+
+    public TablaSimbolos(int id) {
+        this.id = id;
+    }
 
     public String getEtiqueta() { return etiqueta; }
     public void setEtiqueta(String etiqueta) { this.etiqueta = etiqueta; }
@@ -91,52 +96,50 @@ public class TablaSimbolos {
 
     public void actualizarVariable(int pos, String tipo, int desplazamiento) {
         Simbolo s = getSimbolo(pos);
-        System.out.println("DEBUG: TS antes de introducir variable: " + this.getId(pos) + "\n" + this.toString());
         s.setTipo(tipo);
         s.setDesplazamiento(desplazamiento);
-        System.out.println("DEBUG: TS despues de introducir variable: " + this.getId(pos) + "\n" + this.toString());
     }
 
     public void actualizarFuncion(int pos, String tiposP, String tipoRetorno, String etiqueta) {
         Simbolo s = getSimbolo(pos);
-        System.out.println("DEBUG: TS antes de introducir variable: " + this.getId(pos) + "\n" + this.toString());
         int n = tiposP.split(",").length;
         s.setTipo("funcion");
-        s.setParametros(n, tiposP, null, tipoRetorno); // ! Modo de paso parametros, no se que hacer.
+        s.setParametros(n, tiposP, null, tipoRetorno);
         s.setEtiqueta(etiqueta);
-        System.out.println("DEBUG: TS despues de introducir variable: " + this.getId(pos) + "\n" + this.toString());
     }
 
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("CONTENIDOS DE LA TABLA ").append(etiqueta == null ? "(sin etiqueta)" : etiqueta).append(": \n");
+        sb.append("CONTENIDOS DE LA TABLA ").append(etiqueta == null ? "(sin etiqueta)" : etiqueta).append(" #").append(this.id).append(" : \n");
 
         for(Map.Entry<String,Simbolo> entry : tabla.entrySet()){
             String lexema = entry.getKey();
             imprimirSimbolo(lexema, entry.getValue(), sb);
             sb.append("--------- ---------\n");
         }
-        sb.append("---------------------------------------------------\n");
+        sb.append("---------------------------------------------------");
         return sb.toString();
     }
 
     private void imprimirSimbolo(String id, Simbolo s, StringBuilder sb) {
-        sb.append("* LEXEMA: '").append(id).append("'\n");
-        sb.append("  Atributos:\n");
+        sb.append("* LEXEMA : '").append(id).append("'\n");
+        sb.append("  Atributos :\n");
         if (s.getTipo() != null)
-            sb.append("  + tipo: ").append(s.getTipo()).append("\n");
+            sb.append("  + Tipo : '").append(s.getTipo()).append("'\n");
         if (s.getDesplazamiento() != null)
-            sb.append("  + despl: ").append(s.getDesplazamiento()).append("\n");
+            sb.append("  + Despl : ").append(Math.abs(s.getDesplazamiento()) - 1).append("\n");
         if (s.getNumParams() != null) {
-            sb.append("  + numParam: ").append(s.getNumParams()).append("\n");
+            sb.append("  + numParam : ").append(s.getNumParams()).append("\n");
             String[] tipos = s.getTiposParams().split(",");
             for (int i = 0; i < s.getNumParams(); i++) {
-                sb.append("    + tipoParam").append(i + 1).append(": ").append(tipos[i]).append("\n");
-                //sb.append("    modoParam").append(i + 1).append(": ").append(s.getModosPasoParams()[i]).append("\n");
+                sb.append("    ---------\n");
+                sb.append("    + TipoParam").append(i + 1).append(" : '").append(tipos[i]).append("'\n");
+                sb.append("    + ModoParam").append(i + 1).append(": 'valor'\n");
             }
-            sb.append("    + tipoRetorno: ").append(s.getTipoRetorno()).append("\n");
-            sb.append("  + etiqueta: ").append(s.getEtiqueta()).append("\n");
+            sb.append("    ---------\n");
+            sb.append("  + TipoRetorno : '").append(s.getTipoRetorno()).append("'\n");
+            sb.append("  + EtiqFuncion : '").append(s.getEtiqueta()).append("'\n");
         }
     }
 }

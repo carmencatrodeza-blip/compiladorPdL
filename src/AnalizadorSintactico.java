@@ -18,11 +18,13 @@ public class AnalizadorSintactico {
     private String lexemaActual; // Lexema literal del token leído (palabra del código fuente)
     private String lexemaAnterior; // Lexema literal del token anterior
     private final GestorErrores gestorErrores = new GestorErrores();
+    private boolean accionSemanticaCorrecta;
 
     public AnalizadorSintactico(Compilador compilador, AnalizadorLexico lexico, AnalizadorSemantico semantico) {
         this.compilador = compilador;
         this.lexico = lexico;
         this.semantico = semantico;
+        accionSemanticaCorrecta = true;
         inicializarPila();
         inicializarTabla();
         inicializarSetTerminales();
@@ -33,17 +35,19 @@ public class AnalizadorSintactico {
         parse = "";
         tokenActual = leerSiguienteToken();
         
-        while (!pila.isEmpty()) {
+        while (!compilador.getErrorDetectado() && !pila.isEmpty()) {
             String topePila = pila.peek();
 
             if (topePila.startsWith("{") && topePila.endsWith("}")) { // Acción semántica
                 int accion = Integer.parseInt(topePila.substring(1, topePila.length()-1));
-                semantico.accionSemantica(accion);
+                accionSemanticaCorrecta = semantico.accionSemantica(accion, obtenerLexemaLiteral(simboloActual, atributoActual));
+                if (!accionSemanticaCorrecta)
+                    return "0";
                 pila.pop();
             } else if (terminales.contains(topePila)) { // Terminal
                 if (topePila.equals(tokenActual)) {
                     String simbolo = pila.pop();
-                    System.out.println("DEBUG: simbolo = " + simbolo + ", atributo = " + (atributoActual != null ? atributoActual.toString() : "null") + ", lexema = " + lexemaActual);
+                    // System.out.println("DEBUG: simbolo = " + simbolo + ", atributo = " + (atributoActual != null ? atributoActual.toString() : "null") + ", lexema = " + lexemaActual);
                     if (!simbolo.equals("$"))
                         semantico.pushToAux(simbolo, obtenerAtributoParaTerminal(simbolo));
                     lexemaAnterior = lexemaActual;
@@ -80,14 +84,14 @@ public class AnalizadorSintactico {
             }
         }
 
-        if (tokenActual.equals("$") && semantico.auxEsP1()) {
-            return parse.substring(0, parse.length()-1);
-        } else {
+        // Si se espera algo que no sea el EOF y no se ha detectado ningún error aún.
+        if (!tokenActual.equals("$") && !compilador.getErrorDetectado()) {
             compilador.lanzarError();
             gestorErrores.mostrarError(201,
                 compilador.getLinea(), "fin de fichero", tokenActual, lexemaAnterior, null);
             return "0";
         }
+        return parse.substring(0, parse.length()-1);
     }
 
     // Inicializa la pila con el símbolo de inicio y el marcador de fin de cadena.
@@ -134,15 +138,15 @@ public class AnalizadorSintactico {
         tabla = new HashMap<>();
 
         HashMap<String, String> reglasP1 = new HashMap<>();
-        reglasP1.put("function", "1.{10} P {13} {1}");
-        reglasP1.put("if", "1.{10} P {13} {1}");
-        reglasP1.put("let", "1.{10} P {13} {1}");
-        reglasP1.put("read", "1.{10} P {13} {1}");
-        reglasP1.put("return", "1.{10} P {13} {1}");
-        reglasP1.put("while", "1.{10} P {13} {1}");
-        reglasP1.put("write", "1.{10} P {13} {1}");
-        reglasP1.put("id", "1.{10} P {13} {1}");
-        reglasP1.put("$", "1.{10} P {13} {1}");
+        reglasP1.put("function", "1.P {13} {1}");
+        reglasP1.put("if", "1.P {13} {1}");
+        reglasP1.put("let", "1.P {13} {1}");
+        reglasP1.put("read", "1.P {13} {1}");
+        reglasP1.put("return", "1.P {13} {1}");
+        reglasP1.put("while", "1.P {13} {1}");
+        reglasP1.put("write", "1.P {13} {1}");
+        reglasP1.put("id", "1.P {13} {1}");
+        reglasP1.put("$", "1.P {13} {1}");
         tabla.put("P1", reglasP1);
 
         HashMap<String, String> reglasP = new HashMap<>();
@@ -300,7 +304,7 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasL = new HashMap<>();
         reglasL.put("(", "47.E Q {43} {2}");
-        reglasL.put(")", "48.{46}");
+        reglasL.put(")", "48.{10}");
         reglasL.put("id", "47.E Q {43} {2}");
         reglasL.put("entero", "47.E Q {43} {2}");
         reglasL.put("real", "47.E Q {43} {2}");

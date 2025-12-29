@@ -11,419 +11,540 @@ public class AnalizadorSemantico {
         pilaAux = new ArrayList<>();
     }
 
-    public void accionSemantica(int codigoAccion) {
-        // TODO: Implementar lanzamiento de errores semanticos
-        System.out.println("DEBUG: Antes de accion semantica " + codigoAccion + ", pilaAux: " + pilaAux);
+    public boolean accionSemantica(int codigoAccion, String lexemaLeido) {
+
         int TOPE = pilaAux.size() - 1; // Índice del tope de la pila
         // Declaración de variables auxiliares para las reglas
-        SimpleEntry<String, String> P1;
-        SimpleEntry<String, String> P;
-        SimpleEntry<String, String> Pa;
-        SimpleEntry<String, String> B;
-        SimpleEntry<String, String> F;
-        SimpleEntry<String, String> S;
-        SimpleEntry<String, String> S1;
-        SimpleEntry<String, String> H;
-        SimpleEntry<String, String> T;
-        SimpleEntry<String, String> A;
-        SimpleEntry<String, String> K;
-        SimpleEntry<String, String> Ka;
-        SimpleEntry<String, String> C;
-        SimpleEntry<String, String> Ca;
-        SimpleEntry<String, String> E;
-        SimpleEntry<String, String> E1;
-        SimpleEntry<String, String> E1a;
-        SimpleEntry<String, String> R;
-        SimpleEntry<String, String> R1;
-        SimpleEntry<String, String> R1a;
-        SimpleEntry<String, String> U;
-        SimpleEntry<String, String> U1;
-        SimpleEntry<String, String> U1a;
-        SimpleEntry<String, String> V;
-        SimpleEntry<String, String> V1;
-        SimpleEntry<String, String> L;
-        SimpleEntry<String, String> Q;
-        SimpleEntry<String, String> Qa;
-        SimpleEntry<String, String> id;
+        SimpleEntry<String, String> P1, P, Pa, B, F, S, S1, H, T, A, K, Ka, C, Ca, E,
+                                    E1, E1a, R, R1, R1a, U, U1, U1a, V, V1, L, Q, Qa, id;
+        String atrP, atrPa, atrB, atrF, atrS, atrS1, atrH, atrT, atrA, atrK, atrKa,
+                atrC, atrCa, atrE, atrE1, atrE1a, atrR, atrR1, atrR1a, atrU, atrU1, atrU1a,
+                atrV, atrV1, atrQ, atrQa, atrId, lexemaId;
 
         switch (codigoAccion) {
             case 1:
                 pilaAux.remove(TOPE);
-            break;
+                return true;
             case 2:
                 pilaAux.subList(TOPE - 1, TOPE + 1).clear();
-            break;
+                return true;
             case 3:
                 pilaAux.subList(TOPE - 2, TOPE + 1).clear();
-            break;
+                return true;
             case 4:
                 pilaAux.subList(TOPE - 3, TOPE + 1).clear();
-            break;
+                return true;
             case 5:
                 pilaAux.subList(TOPE - 4, TOPE + 1).clear();
-            break;
+                return true;
             case 6:
                 compilador.setZonaDeclaracion(false);
-            break;
+                return true;
             case 7:
                 pilaAux.subList(TOPE - 6, TOPE + 1).clear();
-            break;
+                return true;
             case 8:
                 compilador.setZonaDeclaracion(true);
-            break;
+                return true;
             case 9:
                 pilaAux.subList(TOPE - 8, TOPE + 1).clear();
-            break;
+                return true;
             case 10:
-            break;
+                // L -> lambda ; Se utiliza para llamar a funciones sin parametros, por eso debe ser tipo void y no vacio.
+                pilaAux.get(TOPE).setValue("void");
+                return true;
             case 11:
-                compilador.setTablaLocal(new TablaSimbolos());
+                compilador.setTablaLocal(new TablaSimbolos(compilador.getIdTablaSig()));
                 desplazamientoLocal = -1;
-                String etiqueta = "FUNCION_" + compilador.getTablaGlobal().getId(Integer.parseInt(pilaAux.get(TOPE).getValue()));
+                String etiqueta = "FUNCION-" + compilador.getTablaGlobal().getId(Integer.parseInt(pilaAux.get(TOPE).getValue()));
                 compilador.setEtiquetaActual(etiqueta);
-            break;
+                compilador.getTablaLocal().setEtiqueta(etiqueta);
+                return true;
             case 12:
                 compilador.getWriter().write(compilador.getTablaLocal().toString(), "tabla");
                 compilador.setTablaLocal(null);
                 compilador.setEtiquetaActual("GLOBAL");
-            break;
+                return true;
             case 13:
                 // P1 -> P
                 P1 = pilaAux.get(TOPE - 1);
                 P = pilaAux.get(TOPE);   
-                if("tipo_ok".equals(P.getValue()))
+                atrP = P.getValue();
+
+                compilador.getWriter().writeTablaGlobal(compilador.getTablaGlobal().toString());
+                if("tipo_ok".equals(atrP)){
                     P1.setValue("tipo_ok");
-                else
+                    return true;
+                } else {
                     P1.setValue("tipo_error");
-                compilador.getWriter().write(compilador.getTablaGlobal().toString(), "tabla");
-            break;
+                    return false;
+                }
             case 14:
                 // P -> B P
                 P = pilaAux.get(TOPE - 2);
                 B = pilaAux.get(TOPE - 1);
+                atrB = B.getValue();
                 Pa = pilaAux.get(TOPE);
-                if ("ret_logico".equals(B.getValue()) || "ret_entero".equals(B.getValue()) ||
-                    "ret_real".equals(B.getValue()) || "ret_cadena".equals(B.getValue())) {
+                atrPa = Pa.getValue();
+
+                if ("ret_logico".equals(atrB) || "ret_entero".equals(atrB) ||
+                    "ret_real".equals(atrB) || "ret_cadena".equals(atrB)) {
                     P.setValue("tipo_error");
-                } else if ("vacio".equals(Pa.getValue())) {
-                    P.setValue(B.getValue());
-                } else if (B.getValue().equals(Pa.getValue()) &&
-                        ("tipo_ok".equals(B.getValue()))) {
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(314, compilador.getLinea(), null);
+                    return false;
+                } else if ("vacio".equals(atrPa)) {
+                    P.setValue(atrB);
+                    return true;
+                } else if (atrB.equals(atrPa) &&
+                        ("tipo_ok".equals(atrB))) {
                     P.setValue("tipo_ok");
+                    return true;
                 } else {
                     P.setValue("tipo_error");
+                    return false;
                 }
-            break;
             case 15:
                 // P -> F P
                 P = pilaAux.get(TOPE - 2);
                 F = pilaAux.get(TOPE - 1);
+                atrF = F.getValue();
                 Pa = pilaAux.get(TOPE);
-                if ("vacio".equals(Pa.getValue())) {
-                    P.setValue(F.getValue());
-                } else if (F.getValue().equals(Pa.getValue()) &&
-                        ("tipo_ok".equals(F.getValue()))) {
+                atrPa = Pa.getValue();
+
+                if ("vacio".equals(atrPa)) {
+                    P.setValue(atrF);
+                    return true;
+                } else if (atrF.equals(atrPa) &&
+                        ("tipo_ok".equals(atrF))) {
                     P.setValue("tipo_ok");
+                    return true;
                 } else {
                     P.setValue("tipo_error");
+                    return false;
                 }
-            break;
             case 16:
                 pilaAux.get(TOPE).setValue("vacio");
-            break;
+                return true;
             case 17:
                 pilaAux.get(TOPE - 1).setValue(pilaAux.get(TOPE).getValue());
-            break;
+                return true;
             case 18:
                 pilaAux.get(TOPE - 2).setValue(pilaAux.get(TOPE).getValue());
-            break;
+                return true;
             case 19:
                 pilaAux.get(TOPE - 2).setValue("ret_" + pilaAux.get(TOPE).getValue());
-            break;
+                return true;
             case 20:
                 pilaAux.get(TOPE - 1).setValue("logico");
-            break;
+                return true;
             case 21:
                 pilaAux.get(TOPE - 1).setValue("entero");
-            break;
+                return true;
             case 22:
                 pilaAux.get(TOPE - 1).setValue("real");
-            break;
+                return true;
             case 23:
                 pilaAux.get(TOPE - 1).setValue("cadena");
-            break;
+                return true;
             case 24:
                 pilaAux.get(TOPE - 1).setValue("void");
-            break;
+                return true;
             case 25:
                 // B -> while ( E ) { C
                 B = pilaAux.get(TOPE - 6);
                 E = pilaAux.get(TOPE - 3);
+                atrE = E.getValue();
                 C = pilaAux.get(TOPE);
-                if ("logico".equals(E.getValue()) && !"tipo_error".equals(C.getValue())) {
-                    B.setValue(C.getValue());
+                atrC = C.getValue();
+
+                if ("logico".equals(atrE) && !"tipo_error".equals(atrC)) {
+                    B.setValue(atrC);
                 } else {
                     B.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(313, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 26:
                 // B -> if ( E ) S
                 B = pilaAux.get(TOPE - 5);
                 E = pilaAux.get(TOPE - 2);
+                atrE = E.getValue();
                 S = pilaAux.get(TOPE);
-                if ("logico".equals(E.getValue()) && "tipo_ok".equals(S.getValue())) {
+                atrS = S.getValue();
+
+                if ("logico".equals(atrE) && "tipo_ok".equals(atrS)) {
                     B.setValue("tipo_ok");
+                    return true;
                 } else {
                     B.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(312, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 27:
                 // B -> let T id
                 B = pilaAux.get(TOPE - 3);
                 T = pilaAux.get(TOPE - 1);
+                atrT = T.getValue();
                 id = pilaAux.get(TOPE);
-                actualizarVariableTS(obtenerTablaActual(), id.getValue(), T.getValue());
-                incrementarDesplazamiento(desplazamiento(T.getValue()));
-                B.setValue("tipo_ok");
-            break;
+                atrId = id.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
+                if (buscarTipo(atrId) == null){
+                    actualizarVariableTS(obtenerTablaActual(), atrId, atrT);
+                    incrementarDesplazamiento(desplazamiento(atrT));
+                    B.setValue("tipo_ok");
+                    return true;
+                } else {
+                    B.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(311, compilador.getLinea(), lexemaId);
+                    return false;
+                }
             case 28:
                 // S -> id S1
                 S = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE - 1);
+                atrId = id.getValue();
                 S1 = pilaAux.get(TOPE);
-                if (S1.getValue().equals(buscarTipo(id.getValue()))) {
-                    S.setValue("tipo_ok");
-                } else if ("funcion".equals(buscarTipo(id.getValue())) &&
-                            buscarParametros(id.getValue()).equals(S1.getValue())) {
-                    S.setValue("tipo_ok");
-                } else if (buscarTipo(id.getValue()) == null &&
-                            "entero".equals(S1.getValue())) {
-                    S.setValue("tipo_ok");
-                    actualizarVariableTS(compilador.getTablaGlobal(), id.getValue(), "entero");
-                    incrementarDesplazamiento(desplazamiento("entero"));
-                } else {
+                atrS1 = S1.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
+                if (!atrS1.equals(buscarTipo(atrId))) {
                     S.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(310, compilador.getLinea(), lexemaId);
+                    return false;
+                } else if ("funcion".equals(buscarTipo(atrId)) &&
+                            !buscarParametros(atrId).equals(atrS1)) {
+                    S.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(309, compilador.getLinea(), lexemaId);
+                    return false;
+                } else {
+                    S.setValue("tipo_ok");
+                    return true;
                 }
-            break;
             case 29:
                 // S -> write E
                 S = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE);
-                if ("cadena".equals(E.getValue()) || "entero".equals(E.getValue()) || "real".equals(E.getValue())) {
+                atrE = E.getValue();
+
+                if ("cadena".equals(atrE) ||
+                    "entero".equals(atrE) ||
+                    "real".equals(atrE)) {
                     S.setValue("tipo_ok");
+                    return true;
                 } else {
                     S.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(308, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 30:
                 // S -> read id
                 S = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE);
-                if ("cadena".equals(buscarTipo(id.getValue())) ||
-                    "entero".equals(buscarTipo(id.getValue())) ||
-                    "real".equals(buscarTipo(id.getValue()))) {
+                atrId = id.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
+                if ("cadena".equals(buscarTipo(atrId)) ||
+                    "entero".equals(buscarTipo(atrId)) ||
+                    "real".equals(buscarTipo(atrId))) {
                     S.setValue("tipo_ok");
+                    return true;
                 } else {
                     S.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(307, compilador.getLinea(), lexemaId);
+                    return false;
                 }
-            break;
             case 31:
-                // S -> /= E
-                S = pilaAux.get(TOPE - 2);
+                // S1 -> /= E
+                S1 = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE);
-                if ("entero".equals(E.getValue()) || "real".equals(E.getValue())) {
-                    S.setValue("tipo_ok");
+                atrE = E.getValue();
+
+                if ("entero".equals(atrE) || "real".equals(atrE)) {
+                    S1.setValue(atrE);
+                    return true;
                 } else {
-                    S.setValue("tipo_error");
+                    S1.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(306, compilador.getLinea(), null);
                 }
-            break;
             case 32:
                 // F -> function H id ( A ) { C
                 F = pilaAux.get(TOPE - 8);
                 H = pilaAux.get(TOPE - 6);
+                atrH = H.getValue();
                 id = pilaAux.get(TOPE - 5);
+                atrId = id.getValue();
                 A = pilaAux.get(TOPE - 3);
+                atrA = A.getValue();
                 C = pilaAux.get(TOPE);
-                if (C.getValue().equals("ret_"+H.getValue())) {
+                atrC = C.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
+                if (atrC.equals("ret_" + atrH)) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS(compilador.getTablaGlobal(),id.getValue(),A.getValue(),H.getValue(),compilador.getEtiquetaActual());
-                } else if ("void".equals(H.getValue()) &&
-                            ("vacio".equals(C.getValue()) || "tipo_ok".equals(C.getValue()))) {
+                    actualizarFuncionTS(compilador.getTablaGlobal(), atrId, atrA, atrH, compilador.getEtiquetaActual());
+                    return true;
+                } else if ("void".equals(atrH) &&
+                            ("vacio".equals(atrC) || "tipo_ok".equals(atrC))) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS(compilador.getTablaGlobal(),id.getValue(),A.getValue(),H.getValue(),compilador.getEtiquetaActual());
+                    actualizarFuncionTS(compilador.getTablaGlobal(), atrId, atrA, atrH, compilador.getEtiquetaActual());
+                    return true;
                 } else {
                     F.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(305, compilador.getLinea(), lexemaId);
+                    return false;
                 }
-            break;
             case 33:
                 // A -> T id K
                 A = pilaAux.get(TOPE - 3);
                 T = pilaAux.get(TOPE - 2);
+                atrT = T.getValue();
                 K = pilaAux.get(TOPE);
-                if ("vacio".equals(K.getValue())) {
-                    A.setValue(T.getValue());
+                atrK = K.getValue();
+
+                if ("vacio".equals(atrK)) {
+                    A.setValue(atrT);
                 } else {
-                    A.setValue(T.getValue() + "," + K.getValue());
+                    A.setValue(atrT + "," + atrK);
                 }
-            break;
+                return true;
             case 34:
                 // K -> , T id K
                 K = pilaAux.get(TOPE - 4);
                 T = pilaAux.get(TOPE - 2);
+                atrT = T.getValue();
                 Ka = pilaAux.get(TOPE);
-                if ("vacio".equals(Ka.getValue())) {
-                    K.setValue(T.getValue());
+                atrKa = Ka.getValue();
+
+                if ("vacio".equals(atrKa)) {
+                    K.setValue(atrT);
                 } else {
-                    K.setValue(T.getValue() + "," + Ka.getValue());
+                    K.setValue(atrT + "," + atrKa);
                 }
-            break;
+                return true;
             case 35:
                 // C -> B Ca
                 C = pilaAux.get(TOPE - 2);
                 B = pilaAux.get(TOPE - 1);
+                atrB = B.getValue();
                 Ca = pilaAux.get(TOPE);
-                if ("tipo_error".equals(B.getValue()) || "tipo_error".equals(Ca.getValue())) {
+                atrCa = Ca.getValue();
+
+                if ("tipo_error".equals(atrB) || "tipo_error".equals(atrCa)) {
                     C.setValue("tipo_error");
-                } else if ("ret_logico".equals(B.getValue()) || "ret_entero".equals(B.getValue()) ||
-                            "ret_real".equals(B.getValue()) || "ret_cadena".equals(B.getValue())) {
-                    C.setValue(B.getValue());
-                } else if ("vacio".equals(Ca.getValue())) {
-                    C.setValue(B.getValue());
+                    return false;
+                } else if ("ret_logico".equals(atrB) || "ret_entero".equals(atrB) ||
+                            "ret_real".equals(atrB) || "ret_cadena".equals(atrB)) {
+                    C.setValue(atrB);
+                } else if ("vacio".equals(atrCa)) {
+                    C.setValue(atrB);
                 } else {
-                    C.setValue(Ca.getValue());
+                    C.setValue(atrCa);
                 }
-                break;
+                return true;
             case 36:
                 // E -> R E1
                 E = pilaAux.get(TOPE - 2);
                 R = pilaAux.get(TOPE - 1);
+                atrR = R.getValue();
                 E1 = pilaAux.get(TOPE);
-                if ("vacio".equals(E1.getValue())) {
-                    E.setValue(R.getValue());
-                } else if ("logico".equals(R.getValue()) && R.getValue().equals(E1.getValue())) {
+                atrE1 = E1.getValue();
+
+                if ("vacio".equals(atrE1)) {
+                    E.setValue(atrR);
+                    return true;
+                }
+                if ("logico".equals(atrR) && atrR.equals(atrE1)) {
                     E.setValue("logico");
+                    return true;
                 } else {
                     E.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(304, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 37:
                 // E1 -> && R E1
                 E1 = pilaAux.get(TOPE - 3);
                 R = pilaAux.get(TOPE - 1);
+                atrR = R.getValue();
                 E1a = pilaAux.get(TOPE);
-                if ("vacio".equals(E1a.getValue())) {
-                    E1.setValue(R.getValue());
-                } else if ("logico".equals(R.getValue()) && R.getValue().equals(E1a.getValue())) {
-                    E1.setValue(R.getValue());
+                atrE1a = E1a.getValue();
+
+                if ("vacio".equals(atrE1a)) {
+                    E1.setValue(atrR);
+                    return true;
+                }
+                if ("logico".equals(atrR) && atrR.equals(atrE1a)) {
+                    E1.setValue(atrR);
+                    return true;
                 } else {
                     E1.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(304, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 38:
-                // R -> U R1          entero == entero == entero
+                // R -> U R1
                 R = pilaAux.get(TOPE - 2);
                 U = pilaAux.get(TOPE - 1);
+                atrU = U.getValue();
                 R1 = pilaAux.get(TOPE);
-                if ("vacio".equals(R1.getValue())) {
-                    R.setValue(U.getValue());
-                } else if (("logico".equals(U.getValue()) || "entero".equals(U.getValue()) ||
-                            "real".equals(U.getValue())) && U.getValue().equals(R1.getValue())) {
+                atrR1 = R1.getValue();
+
+                if ("vacio".equals(atrR1)) {
+                    R.setValue(atrU);
+                    return true;
+                }
+                if (("logico".equals(atrU) || "entero".equals(atrU) ||
+                            "real".equals(atrU)) && atrU.equals(atrR1)) {
                     R.setValue("logico");
+                    return true;
                 } else {
                     R.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(303, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 39:
                 // R1 -> == U R1
                 R1 = pilaAux.get(TOPE - 3);
                 U = pilaAux.get(TOPE - 1);
+                atrU = U.getValue();
                 R1a = pilaAux.get(TOPE);
-                if ("vacio".equals(R1a.getValue())) {
-                    R1.setValue(U.getValue());
-                } else if (("logico".equals(U.getValue()) || "entero".equals(U.getValue()) ||
-                            "real".equals(U.getValue())) && U.getValue().equals(R1a.getValue())) {
-                    R1.setValue(U.getValue());
+                atrR1a = R1a.getValue();
+
+                if ("vacio".equals(atrR1a)) {
+                    R1.setValue(atrU);
+                    return true;
+                }
+                if (("logico".equals(atrU) || "entero".equals(atrU) ||
+                            "real".equals(atrU)) && atrU.equals(atrR1a)) {
+                    R1.setValue(atrU);
+                    return true;
                 } else {
                     R1.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(303, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 40:
                 // U -> V U1
                 U = pilaAux.get(TOPE - 2);
                 V = pilaAux.get(TOPE - 1);
+                atrV = V.getValue();
                 U1 = pilaAux.get(TOPE);
-                if ("vacio".equals(U1.getValue())) {
-                    U.setValue(V.getValue());
-                } else if (("entero".equals(V.getValue()) || "real".equals(V.getValue()))
-                            && V.getValue().equals(U1.getValue())) {
-                    U.setValue(V.getValue());
+                atrU1 = U1.getValue();
+
+                if ("vacio".equals(atrU1)) {
+                    U.setValue(atrV);
+                    return true;
+                }
+                if (("entero".equals(atrV) || "real".equals(atrV))
+                            && atrV.equals(atrU1)) {
+                    U.setValue(atrV);
+                    return true;
                 } else {
                     U.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(302, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 41:
                 // U1 -> / V U1
                 U1 = pilaAux.get(TOPE - 3);
                 V = pilaAux.get(TOPE - 1);
+                atrV = V.getValue();
                 U1a = pilaAux.get(TOPE);
-                if (U1a.getValue().equals("vacio")) {
-                    U1.setValue(V.getValue());
-                } else if (("entero".equals(V.getValue()) || "real".equals(V.getValue()))
-                            && V.getValue().equals(U1a.getValue())) {
-                    U1.setValue(V.getValue());
+                atrU1a= U1a.getValue();
+
+                if (atrU1a.equals("vacio")) {
+                    U1.setValue(atrV);
+                    return true;
+                } else if (("entero".equals(atrV) || "real".equals(atrV))
+                            && atrV.equals(atrU1a)) {
+                    U1.setValue(atrV);
+                    return true;
                 } else {
                     U1.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(302, compilador.getLinea(), null);
+                    return false;
                 }
-            break;
             case 42:
                 // V -> id V1
                 V = pilaAux.get(TOPE - 2);
                 id = pilaAux.get(TOPE - 1);
+                atrId = id.getValue();
                 V1 = pilaAux.get(TOPE);
-                if ("vacio".equals(V1.getValue())) {
-                    V.setValue(buscarTipo(id.getValue()));
-                } else if ("funcion".equals(buscarTipo(id.getValue())) &&
-                            buscarParametros(id.getValue()).equals(V1.getValue())) {
-                    V.setValue(buscarTipoRetorno(id.getValue()));
+                atrV1 = V1.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
+                if ("vacio".equals(atrV1)) {
+                    V.setValue(buscarTipo(atrId));
+                    return true;
+                }
+                if ("funcion".equals(buscarTipo(atrId)) &&
+                            buscarParametros(atrId).equals(atrV1)) {
+                    V.setValue(buscarTipoRetorno(atrId));
+                    return true;
                 } else {
                     V.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(301, compilador.getLinea(), lexemaId);
+                    return false;
                 }
-            break;
             case 43:
                 // L -> E Q
                 L = pilaAux.get(TOPE - 2);
                 E = pilaAux.get(TOPE - 1);
+                atrE = E.getValue();
                 Q = pilaAux.get(TOPE);
-                if ("vacio".equals(Q.getValue())) {
-                    L.setValue(E.getValue());
+                atrQ = Q.getValue();
+
+                if ("vacio".equals(atrQ)) {
+                    L.setValue(atrE);
                 } else {
-                    L.setValue(E.getValue() + "," + Q.getValue());
+                    L.setValue(atrE + "," + atrQ);
                 }
-            break;
+                return true;
             case 44:
                 // Q -> , E Q
                 Q = pilaAux.get(TOPE - 3);
                 E = pilaAux.get(TOPE - 1);
+                atrE = E.getValue();
                 Qa = pilaAux.get(TOPE);
-                if ("vacio".equals(Qa.getValue())) {
-                    Q.setValue(E.getValue());
+                atrQa = Qa.getValue();
+
+                if ("vacio".equals(atrQa)) {
+                    Q.setValue(atrE);
                 } else {
-                    Q.setValue(E.getValue() + "," + Qa.getValue());
+                    Q.setValue(atrE + "," + atrQa);
                 }
-            break;
+                return true;
             case 45:
                 // A -> T id ; K -> , T id
                 id = pilaAux.get(TOPE);
+                atrId = id.getValue();
                 T = pilaAux.get(TOPE - 1);
-                actualizarVariableTS(obtenerTablaActual(), id.getValue(), T.getValue());
-                incrementarDesplazamiento(desplazamiento(T.getValue()));
-            break;
-            case 46:
-                // L -> lambda ; Se utiliza para llamar a funciones sin parametros, por eso debe ser tipo void y no vacio.
-                pilaAux.get(TOPE).setValue("void");
-            break;
+                atrT = T.getValue();
+
+                actualizarVariableTS(obtenerTablaActual(), atrId, atrT);
+                incrementarDesplazamiento(desplazamiento(atrT));
+                return true;
+            default:
+                return false;
         }
-        System.out.println("DEBUG: Despues de accion semantica " + codigoAccion + ", pilaAux: " + pilaAux);
     }
 
     private void actualizarVariableTS(TablaSimbolos tabla, String pos, String tipo) {
@@ -470,7 +591,7 @@ public class AnalizadorSemantico {
             s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
         if (s == null)
             s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
-        return s.getTipo();
+        return s != null ? s.getTipo() : null;
     }
 
     private String buscarParametros(String pos) {
@@ -479,7 +600,7 @@ public class AnalizadorSemantico {
             s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
         if (s == null)
             s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
-        return s.getTiposParams();
+        return s != null ? s.getTiposParams() : null;
     }
 
     private String buscarTipoRetorno(String pos) {
@@ -488,7 +609,7 @@ public class AnalizadorSemantico {
             s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
         if (s == null)
             s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
-        return s.getTipoRetorno();
+        return s != null ? s.getTipoRetorno() : null;
     }
     
     // Añade desde el Sintáctico los elementos a la pila auxiliar
@@ -497,8 +618,7 @@ public class AnalizadorSemantico {
     }
 
     // Condición de análisis semántico correcto
-    public boolean auxEsP1() {
-        System.out.println("DEBUG: auxEsP1 "+ pilaAux.toString());
+    public boolean pilaAuxCorrecta() {
         return pilaAux.size() == 1 && "P1".equals(pilaAux.get(0).getKey())
                 && "tipo_ok".equals(pilaAux.get(0).getValue());
     }

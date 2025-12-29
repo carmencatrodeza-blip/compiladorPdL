@@ -7,13 +7,16 @@ public class Compilador {
     private int desplazamientoGlobal;
     private TablaSimbolos tablaLocal; // null si no estamos en función
     private String etiquetaActual;
+    private int idTablaSig;
     private boolean zonaDeclaracion;
     private boolean errorDetectado;
 
     public Compilador() {
         gestorErrores = new GestorErrores();
-        linea = 0;
-        tablaGlobal = new TablaSimbolos();
+        linea = 1;
+        idTablaSig = 1;
+        tablaGlobal = new TablaSimbolos(idTablaSig);
+        idTablaSig++;
         etiquetaActual = "GLOBAL";
         tablaGlobal.setEtiqueta(etiquetaActual);
         desplazamientoGlobal = 1;
@@ -33,18 +36,18 @@ public class Compilador {
     public boolean getZonaDeclaracion() { return zonaDeclaracion; }
     public String getEtiquetaActual() { return etiquetaActual; }
     public boolean getErrorDetectado() { return errorDetectado; }
+    public int getIdTablaSig() { return idTablaSig++; }
     
     public void incrementarLinea() { linea++; }
     public void incrementarDesplazamientoGlobal(int incremento) { desplazamientoGlobal += incremento; }
     public void setTablaLocal(TablaSimbolos t) { tablaLocal = t; }
     public void setZonaDeclaracion(boolean b) { zonaDeclaracion = b; }
     public void setEtiquetaActual(String e) { etiquetaActual = e; }
-    public void lanzarError() { 
+    public void lanzarError() {
         if (!errorDetectado) {
-            writer.write(tablaGlobal.toString(), "tabla");
-            if (tablaLocal != null) {
+            if (tablaLocal != null)
                 writer.write(tablaLocal.toString(), "tabla");
-            }
+            writer.writeTablaGlobal(tablaGlobal.toString());
         }
         errorDetectado = true; 
     }

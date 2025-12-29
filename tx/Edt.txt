@@ -192,7 +192,7 @@ TRADUCCION A TERMINOS DE PILA
 7.  {Pop(7)}
 8.  {zona_declaracion = true}
 9.  {Pop(9)}
-10. {TSG:= CrearTabla(); desplG:= 1 ; etiq = "global"}
+10. {AUX[tope].tipo:=void}
 11. {TSL:= CrearTabla(); desplL:= -1 ; etiq = buscarId(AUX[tope].pos)}
 12. {LiberarTabla(TSL)}
 13. {AUX[tope-1].tipo := if(AUX[tope].tipo=tipo_ok) then tipo_ok else tipo_error ; LiberarTabla(TSG)}
@@ -228,11 +228,10 @@ TRADUCCION A TERMINOS DE PILA
 43. {AUX[tope-2].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
 44. {AUX[tope-3].tipo:=if(AUX[tope].tipo=vacio)then AUX[tope-1].tipo else AUX[tope-1].tipo x AUX[tope].tipo}
 45. {actualizarVariableTS(TSL, AUX[TOPE].pos, AUX[TOPE-1].tipo)}
-46. {AUX[tope].tipo:=void}
 
 EdT CON REGLAS TRADUCIDAS A PILA
 
-P1 -> {10} P {13} {1}
+P1 -> P {13} {1}
 P -> B P {14} {2}
 P -> F P {15} {2}
 P -> lambda {16}
@@ -279,6 +278,6 @@ V1 -> lambda {16}
 X -> E {17} {1}
 X -> lambda {16}
 L -> E Q {43} {2}
-L -> lambda {46}
+L -> lambda {10}
 Q -> , E Q {44} {3}
 Q -> lambda {16}

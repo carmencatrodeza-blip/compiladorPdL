@@ -26,6 +26,8 @@ public class GestorErrores {
 		case 6:
 			output += "Error al cerrar el fichero.";
 			break;
+		default:
+			output += "Error desconocido.";
 		}
 		output += BLANCO;
 		System.err.println(output);
@@ -59,6 +61,8 @@ public class GestorErrores {
 		case 108:
 			output += "Constante cadena demasiado larga (>64 caracteres): " + lexema + ".";
 			break;
+		default:
+			output += "Error desconocido.";
 		}
 		output += BLANCO;
 		System.err.println(output);
@@ -74,6 +78,62 @@ public class GestorErrores {
 		case 202:
 			output += "se esperaba uno de los siguientes: " + posibles + ", pero se encontró '" + tokenActual + "'.";
 			break;
+		default:
+			output += "Error desconocido.";
+		}
+		output += BLANCO;
+		System.err.println(output);
+	}
+
+	// Mensajes de error semántico
+	public void mostrarError(int codigo, int linea, String lexema) {
+		output += ROJO + "Error Semántico [Línea " + linea + "]: ";
+		switch (codigo) {
+		case 301:
+			output += "Los parámetros usados en la función '" + lexema + "' no coinciden con los de su declaración.";
+		break;
+		case 302:
+			output += "Operación aritmética '/' realizada con tipos de datos diferentes.";
+		break;
+		case 303:
+			output += "Operación relacional '==' realizada con tipos de datos diferentes.";
+		break;
+		case 304:
+			output += "Operación lógica '&&' realizada con tipos de datos diferentes.";
+		break;
+		case 305:
+			output += "El tipo de retorno de la función '" + lexema + "' no coincide con el de su cabecera.";
+		break;
+		case 306:
+			output += "Asignación '/=' realizada con una variable de tipo distinto a entero o real.";
+		break;
+		case 307:
+			output += "La variable '" + lexema + "' debe ser de tipo entero, real o cadena para poder guardar un dato en ella.";
+		break;
+		case 308:
+			output += "Para escribir un dato por pantalla el dato debe ser de tipo entero, real o cadena.";
+		break;
+		case 309:
+			output += "Los tipos de los parámetros usados en la función '" + lexema + "' no coinciden con los tipos de los parámetros de su declaración.";
+		break;
+		case 310:
+			output += "El tipo de '" + lexema + "' no coincide con el de su valor asignado.";
+		break;
+		case 311:
+			output += "La variable '" + lexema + "' se ha declarado anteriormente.";
+		break;
+		case 312:
+			output += "El tipo de la expresión evaluada en la estructura 'if' debe ser lógico.";
+		break;
+		case 313:
+			output += "El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.";
+		break;
+		case 314:
+			// TODO: Mejorar localización de la línea o borrar la línea para este mensaje.
+			output += "Sentencia 'return' fuera de estructura de función.";
+		break;
+		default:
+			output += "Error desconocido.";
 		}
 		output += BLANCO;
 		System.err.println(output);
