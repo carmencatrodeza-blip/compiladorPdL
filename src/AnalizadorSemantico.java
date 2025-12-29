@@ -160,6 +160,7 @@ public class AnalizadorSemantico {
 
                 if ("logico".equals(atrE) && !"tipo_error".equals(atrC)) {
                     B.setValue(atrC);
+                    return true;
                 } else {
                     B.setValue("tipo_error");
                     compilador.lanzarError();
@@ -275,6 +276,7 @@ public class AnalizadorSemantico {
                     S1.setValue("tipo_error");
                     compilador.lanzarError();
                     compilador.getGestorErrores().mostrarError(306, compilador.getLinea(), null);
+                    return false;
                 }
             case 32:
                 // F -> function H id ( A ) { C
