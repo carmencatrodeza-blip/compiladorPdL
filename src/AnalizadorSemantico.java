@@ -97,7 +97,7 @@ public class AnalizadorSemantico {
                     "ret_real".equals(atrB) || "ret_cadena".equals(atrB)) {
                     P.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(314, compilador.getLinea(), null);
+                    compilador.getGestorErrores().mostrarError(313, compilador.getLinea(), null);
                     return false;
                 } else if ("vacio".equals(atrPa)) {
                     P.setValue(atrB);
@@ -149,7 +149,7 @@ public class AnalizadorSemantico {
                 } else {
                     S.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(314, compilador.getLinea(), null);
+                    compilador.getGestorErrores().mostrarError(313, compilador.getLinea(), null);
                 }
                 
             case 20:
@@ -181,7 +181,7 @@ public class AnalizadorSemantico {
                 } else {
                     B.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(313, compilador.getLinea(), null);
+                    compilador.getGestorErrores().mostrarError(312, compilador.getLinea(), null);
                     return false;
                 }
             case 26:
@@ -198,7 +198,7 @@ public class AnalizadorSemantico {
                 } else {
                     B.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(312, compilador.getLinea(), null);
+                    compilador.getGestorErrores().mostrarError(311, compilador.getLinea(), null);
                     return false;
                 }
             case 27:
@@ -218,7 +218,7 @@ public class AnalizadorSemantico {
                 } else {
                     B.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(311, compilador.getLinea(), lexemaId);
+                    compilador.getGestorErrores().mostrarError(310, compilador.getLinea(), lexemaId);
                     return false;
                 }
             case 28:
@@ -230,16 +230,16 @@ public class AnalizadorSemantico {
                 atrS1 = S1.getValue();
                 lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
 
-                if (!atrS1.equals(buscarTipo(atrId))) {
+                if (!"funcion".equals(buscarTipo(atrId)) && !atrS1.equals(buscarTipo(atrId))) {
                     S.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(310, compilador.getLinea(), lexemaId);
+                    compilador.getGestorErrores().mostrarError(309, compilador.getLinea(), lexemaId);
                     return false;
                 } else if ("funcion".equals(buscarTipo(atrId)) &&
                             !buscarParametros(atrId).equals(atrS1)) {
                     S.setValue("tipo_error");
                     compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(309, compilador.getLinea(), lexemaId);
+                    compilador.getGestorErrores().mostrarError(301, compilador.getLinea(), lexemaId);
                     return false;
                 } else {
                     S.setValue("tipo_ok");

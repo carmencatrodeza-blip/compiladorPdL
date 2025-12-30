@@ -4,6 +4,8 @@ public class GestorErrores {
 	private final String BLANCO = "\033[0m";
 	private String output = "";
 
+	// TODO: intentar mejorar el control de la linea (hay veces que se indica que el error está en la línea siguiente a dónde realmente está).
+
 	// Mensajes de error genéricos
 	public void mostrarError(int codigo){
 		output += ROJO;
@@ -93,16 +95,16 @@ public class GestorErrores {
 			output += "Los parámetros usados en la función '" + lexema + "' no coinciden con los de su declaración.";
 		break;
 		case 302:
-			output += "Operación aritmética '/' realizada con tipos de datos diferentes.";
+			output += "Operación aritmética '/' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser enteros o reales.";
 		break;
 		case 303:
-			output += "Operación relacional '==' realizada con tipos de datos diferentes.";
+			output += "Operación relacional '==' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser enteros, reales o lógicos.";
 		break;
 		case 304:
-			output += "Operación lógica '&&' realizada con tipos de datos diferentes.";
+			output += "Operación lógica '&&' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser lógicos.";
 		break;
 		case 305:
-			output += "El tipo de retorno de la función '" + lexema + "' no coincide con el de su cabecera.";
+			output += "El tipo de la sentencia 'return' de la función '" + lexema + "' no coincide con el de su cabecera.";
 		break;
 		case 306:
 			output += "Asignación '/=' realizada con una variable de tipo distinto a entero o real.";
@@ -114,21 +116,18 @@ public class GestorErrores {
 			output += "Para escribir un dato por pantalla el dato debe ser de tipo entero, real o cadena.";
 		break;
 		case 309:
-			output += "Los tipos de los parámetros usados en la función '" + lexema + "' no coinciden con los tipos de los parámetros de su declaración.";
-		break;
-		case 310:
 			output += "El tipo de '" + lexema + "' no coincide con el de su valor asignado.";
 		break;
-		case 311:
+		case 310:
 			output += "La variable '" + lexema + "' se ha declarado anteriormente.";
 		break;
-		case 312:
+		case 311:
 			output += "El tipo de la expresión evaluada en la estructura 'if' debe ser lógico.";
 		break;
-		case 313:
+		case 312:
 			output += "El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.";
 		break;
-		case 314:
+		case 313:
 			output += "Sentencia 'return' fuera de estructura de función.";
 		break;
 		default:

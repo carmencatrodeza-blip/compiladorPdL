@@ -45,7 +45,7 @@ B -> let T id {
 } ;
 
 S -> id S1 {
-    if (buscarTipo(id.pos) != S1.tipo) then tipo_error
+    if (buscarTipo(id.pos) != funcion AND buscarTipo(id.pos) != S1.tipo) then tipo_error
     else if (buscarTipo(id.pos) = funcion AND buscarParametros(id.pos) != S1.tipo) then tipo_error
     else tipo_ok
 } ;
@@ -273,7 +273,7 @@ TRADUCCION A TERMINOS DE PILA
     }
 
 28. {AUX[tope-2].tipo :=
-        if (AUX[tope].tipo != buscarTipo(AUX[tope-1].pos)) then tipo_error
+        if (AUX[tope].tipo != funcion AND AUX[tope].tipo != buscarTipo(AUX[tope-1].pos)) then tipo_error
         else if (buscarTipo(AUX[tope-1].pos) = funcion
                 AND buscarParametros(AUX[tope-1].pos) != AUX[tope].tipo) then tipo_error
         else tipo_ok
