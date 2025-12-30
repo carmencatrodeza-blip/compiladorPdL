@@ -15,11 +15,11 @@ public class AnalizadorSemantico {
 
         int TOPE = pilaAux.size() - 1; // Índice del tope de la pila
         // Declaración de variables auxiliares para las reglas
-        SimpleEntry<String, String> P1, P, Pa, B, F, S, S1, H, T, A, K, Ka, C, Ca, E,
-                                    E1, E1a, R, R1, R1a, U, U1, U1a, V, V1, L, Q, Qa, id;
+        SimpleEntry<String, String> P1, P, Pa, B, F, S, S1, H, T, A, K, Ka, C, Ca, E, E1,
+                                    E1a, R, R1, R1a, U, U1, U1a, V, V1, X,  L, Q, Qa, id;
         String atrP, atrPa, atrB, atrF, atrS, atrS1, atrH, atrT, atrA, atrK, atrKa,
-                atrC, atrCa, atrE, atrE1, atrE1a, atrR, atrR1, atrR1a, atrU, atrU1, atrU1a,
-                atrV, atrV1, atrQ, atrQa, atrId, lexemaId;
+                atrC, atrCa, atrE, atrE1, atrE1a, atrR, atrR1, atrR1a, atrU, atrU1,
+                atrU1a, atrV, atrV1, atrX, atrQ, atrQa, atrId, lexemaId;
 
         switch (codigoAccion) {
             case 1:
@@ -50,20 +50,22 @@ public class AnalizadorSemantico {
                 pilaAux.subList(TOPE - 8, TOPE + 1).clear();
                 return true;
             case 10:
-                // L -> lambda ; Se utiliza para llamar a funciones sin parametros, por eso debe ser tipo void y no vacio.
+                // L -> lambda ; X -> lambda ; Se utiliza para llamar a funciones sin parametros, por eso debe ser tipo void y no vacio.
                 pilaAux.get(TOPE).setValue("void");
                 return true;
             case 11:
                 compilador.setTablaLocal(new TablaSimbolos(compilador.getIdTablaSig()));
-                desplazamientoLocal = -1;
+                desplazamientoLocal = 0;
                 String etiqueta = "FUNCION-" + compilador.getTablaGlobal().getId(Integer.parseInt(pilaAux.get(TOPE).getValue()));
                 compilador.setEtiquetaActual(etiqueta);
                 compilador.getTablaLocal().setEtiqueta(etiqueta);
+                compilador.setDentroDeFuncion(true);
                 return true;
             case 12:
                 compilador.getWriter().write(compilador.getTablaLocal().toString(), "tabla");
                 compilador.setTablaLocal(null);
                 compilador.setEtiquetaActual("GLOBAL");
+                compilador.setDentroDeFuncion(false);
                 return true;
             case 13:
                 // P1 -> P
@@ -72,11 +74,15 @@ public class AnalizadorSemantico {
                 atrP = P.getValue();
 
                 compilador.getWriter().writeTablaGlobal(compilador.getTablaGlobal().toString());
+                compilador.setTablaGlobal(null);
+                compilador.setEtiquetaActual(null);
                 if("tipo_ok".equals(atrP)){
                     P1.setValue("tipo_ok");
                     return true;
                 } else {
                     P1.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(300, compilador.getLinea(), null);
                     return false;
                 }
             case 14:
@@ -96,8 +102,8 @@ public class AnalizadorSemantico {
                 } else if ("vacio".equals(atrPa)) {
                     P.setValue(atrB);
                     return true;
-                } else if (atrB.equals(atrPa) &&
-                        ("tipo_ok".equals(atrB))) {
+                } else if ("tipo_ok".equals(atrB) &&
+                        atrB.equals(atrPa)) {
                     P.setValue("tipo_ok");
                     return true;
                 } else {
@@ -115,8 +121,8 @@ public class AnalizadorSemantico {
                 if ("vacio".equals(atrPa)) {
                     P.setValue(atrF);
                     return true;
-                } else if (atrF.equals(atrPa) &&
-                        ("tipo_ok".equals(atrF))) {
+                } else if ("tipo_ok".equals(atrF) &&
+                        atrF.equals(atrPa)) {
                     P.setValue("tipo_ok");
                     return true;
                 } else {
@@ -133,8 +139,19 @@ public class AnalizadorSemantico {
                 pilaAux.get(TOPE - 2).setValue(pilaAux.get(TOPE).getValue());
                 return true;
             case 19:
-                pilaAux.get(TOPE - 2).setValue("ret_" + pilaAux.get(TOPE).getValue());
-                return true;
+                // S -> return X
+                S = pilaAux.get(TOPE - 2);
+                X = pilaAux.get(TOPE);
+                atrX = X.getValue();
+                if (compilador.getDentroDeFuncion()){
+                    S.setValue("ret_" + atrX);
+                    return true;
+                } else {
+                    S.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(314, compilador.getLinea(), null);
+                }
+                
             case 20:
                 pilaAux.get(TOPE - 1).setValue("logico");
                 return true;
@@ -293,12 +310,12 @@ public class AnalizadorSemantico {
 
                 if (atrC.equals("ret_" + atrH)) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS(compilador.getTablaGlobal(), atrId, atrA, atrH, compilador.getEtiquetaActual());
+                    actualizarFuncionTS(atrId, atrA, atrH, compilador.getEtiquetaActual());
                     return true;
                 } else if ("void".equals(atrH) &&
                             ("vacio".equals(atrC) || "tipo_ok".equals(atrC))) {
                     F.setValue("tipo_ok");
-                    actualizarFuncionTS(compilador.getTablaGlobal(), atrId, atrA, atrH, compilador.getEtiquetaActual());
+                    actualizarFuncionTS(atrId, atrA, atrH, compilador.getEtiquetaActual());
                     return true;
                 } else {
                     F.setValue("tipo_error");
@@ -344,6 +361,8 @@ public class AnalizadorSemantico {
 
                 if ("tipo_error".equals(atrB) || "tipo_error".equals(atrCa)) {
                     C.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(300, compilador.getLinea(), null);
                     return false;
                 } else if ("ret_logico".equals(atrB) || "ret_entero".equals(atrB) ||
                             "ret_real".equals(atrB) || "ret_cadena".equals(atrB)) {
@@ -388,7 +407,7 @@ public class AnalizadorSemantico {
                     return true;
                 }
                 if ("logico".equals(atrR) && atrR.equals(atrE1a)) {
-                    E1.setValue(atrR);
+                    E1.setValue("logico");
                     return true;
                 } else {
                     E1.setValue("tipo_error");
@@ -550,22 +569,23 @@ public class AnalizadorSemantico {
     }
 
     private void actualizarVariableTS(TablaSimbolos tabla, String pos, String tipo) {
-        int desplazamiento = compilador.getEtiquetaActual().equals("GLOBAL") ? compilador.getDesplazamientoGlobal() : desplazamientoLocal;
+        int desplazamiento = compilador.getEtiquetaActual().equals("GLOBAL") ?
+                            compilador.getDesplazamientoGlobal() : desplazamientoLocal;
         tabla.actualizarVariable(Integer.parseInt(pos), tipo, desplazamiento);
     }
-    private void actualizarFuncionTS(TablaSimbolos tabla, String pos, String tiposP, String tipoR, String etiqueta) {
-        tabla.actualizarFuncion(Integer.parseInt(pos), tiposP, tipoR, etiqueta);
+    private void actualizarFuncionTS(String pos, String tiposP, String tipoR, String etiqueta) {
+        compilador.getTablaGlobal().actualizarFuncion(Integer.parseInt(pos), tiposP, tipoR, etiqueta);
     }
     private int desplazamiento(String tipo) {
         switch (tipo) {
             case "logico":
-                return 4;
+                return 1;
             case "entero":
-                return 4;
+                return 1;
             case "real":
-                return 8;
+                return 2;
             case "cadena":
-                return 128;
+                return 32;
             default:
                 return 0;
         }
@@ -597,21 +617,11 @@ public class AnalizadorSemantico {
     }
 
     private String buscarParametros(String pos) {
-        TablaSimbolos.Simbolo s = null;
-        if(!compilador.getEtiquetaActual().equals("GLOBAL"))
-            s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
-        if (s == null)
-            s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
-        return s != null ? s.getTiposParams() : null;
+        return compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos)).getTiposParams();
     }
 
     private String buscarTipoRetorno(String pos) {
-        TablaSimbolos.Simbolo s = null;
-        if(!compilador.getEtiquetaActual().equals("GLOBAL"))
-            s = obtenerTablaActual().getSimbolo(Integer.parseInt(pos));
-        if (s == null)
-            s = compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos));
-        return s != null ? s.getTipoRetorno() : null;
+        return compilador.getTablaGlobal().getSimbolo(Integer.parseInt(pos)).getTipoRetorno();
     }
     
     // Añade desde el Sintáctico los elementos a la pila auxiliar

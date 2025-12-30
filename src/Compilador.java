@@ -3,13 +3,14 @@ public class Compilador {
     private final GestorErrores gestorErrores;
     private final Writer writer;
     private int linea;
-    private final TablaSimbolos tablaGlobal;
+    private TablaSimbolos tablaGlobal;
     private int desplazamientoGlobal;
     private TablaSimbolos tablaLocal; // null si no estamos en función
     private String etiquetaActual;
     private int idTablaSig;
     private boolean zonaDeclaracion;
     private boolean errorDetectado;
+    private boolean dentroDeFuncion;
 
     public Compilador() {
         gestorErrores = new GestorErrores();
@@ -19,10 +20,11 @@ public class Compilador {
         idTablaSig++;
         etiquetaActual = "GLOBAL";
         tablaGlobal.setEtiqueta(etiquetaActual);
-        desplazamientoGlobal = 1;
+        desplazamientoGlobal = 0;
         zonaDeclaracion = false;
         writer = new Writer(gestorErrores);
         errorDetectado = false;
+        dentroDeFuncion = false;
     }
 
     // Getters y setters
@@ -37,12 +39,15 @@ public class Compilador {
     public String getEtiquetaActual() { return etiquetaActual; }
     public boolean getErrorDetectado() { return errorDetectado; }
     public int getIdTablaSig() { return idTablaSig++; }
+    public boolean getDentroDeFuncion() { return dentroDeFuncion; }
     
     public void incrementarLinea() { linea++; }
     public void incrementarDesplazamientoGlobal(int incremento) { desplazamientoGlobal += incremento; }
+    public void setTablaGlobal(TablaSimbolos t) { tablaGlobal = t; }
     public void setTablaLocal(TablaSimbolos t) { tablaLocal = t; }
     public void setZonaDeclaracion(boolean b) { zonaDeclaracion = b; }
     public void setEtiquetaActual(String e) { etiquetaActual = e; }
+    public void setDentroDeFuncion(boolean b) { dentroDeFuncion = b; }
     public void lanzarError() {
         if (!errorDetectado) {
             if (tablaLocal != null)

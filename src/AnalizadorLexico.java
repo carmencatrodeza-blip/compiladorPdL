@@ -172,27 +172,27 @@ public class AnalizadorLexico {
 					lexema += (char)caracter;
 					estado = 2;
 					leerCaracter();
-				}
-				else{
+				} else {
 					if(!esReservada(lexema).equals("noEsReservada")){
 						compilador.getWriter().write("< " + lexema + " , >", "tokens");
 						return new SimpleEntry<>(lexema, null);
 					} else {
 						int pos = -1;
-						// Si se está declarando, se añade a la tabla activa.
-						if (compilador.getZonaDeclaracion())
+						if (compilador.getZonaDeclaracion()) {
 							pos = compilador.getTablaActual().addSimbolo(lexema);
-						// Si existe tabla local activa, se busca primero allí.
-						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
-							pos = compilador.getTablaActual().contieneId(lexema);
-						// Si la tabla activa es la global o no se encontró en la local, se busca en la global.
-						if(pos == -1)
-							pos = compilador.getTablaGlobal().contieneId(lexema);
-						// Declaración implícita.
-						if(pos == -1){ 
-							pos = compilador.getTablaGlobal().addSimbolo(lexema);
-							compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
-							compilador.incrementarDesplazamientoGlobal(4);
+						} else {
+							// Buscar primero en local
+							if (!compilador.getEtiquetaActual().equals("GLOBAL"))
+								pos = compilador.getTablaActual().contieneId(lexema);
+							// Si no está en local, buscar en global
+							if (pos == -1)
+								pos = compilador.getTablaGlobal().contieneId(lexema);
+							// Declaración implícita
+							if (pos == -1) {
+								pos = compilador.getTablaGlobal().addSimbolo(lexema);
+								compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
+								compilador.incrementarDesplazamientoGlobal(1);
+							}
 						}
 						compilador.getWriter().write("< id , " + pos + " >", "tokens");
 						return new SimpleEntry<>("id", pos);
@@ -205,22 +205,22 @@ public class AnalizadorLexico {
 					leerCaracter();
 				} else {
 					int pos = -1;
-						// Si existe tabla local activa se busca primero allí.
-						if(!compilador.getEtiquetaActual().equals("GLOBAL"))
+					if (compilador.getZonaDeclaracion()) {
+						pos = compilador.getTablaActual().addSimbolo(lexema);
+					} else {
+					    // Buscar primero en local
+						if (!compilador.getEtiquetaActual().equals("GLOBAL"))
 							pos = compilador.getTablaActual().contieneId(lexema);
-						// Si la tabla activa es la global o no se encontró en la local se busca en la global.
-						if(pos == -1)
+					    // Si no está en local, buscar en global
+						if (pos == -1)
 							pos = compilador.getTablaGlobal().contieneId(lexema);
-						// Si no se encontró en ninguna es un nuevo id.
-						if(pos == -1){
-							if (compilador.getZonaDeclaracion()) // Se añade a la tabla activa.
-								pos = compilador.getTablaActual().addSimbolo(lexema);
-							else { // Declaración implícita.
-								pos = compilador.getTablaGlobal().addSimbolo(lexema);
-								compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
-								compilador.incrementarDesplazamientoGlobal(4);
-							}
+					    // Declaración implícita
+						if (pos == -1) {
+							pos = compilador.getTablaGlobal().addSimbolo(lexema);
+							compilador.getTablaGlobal().actualizarVariable(pos, "entero", compilador.getDesplazamientoGlobal());
+							compilador.incrementarDesplazamientoGlobal(1);
 						}
+					}
 					compilador.getWriter().write("< id , " + pos + " >", "tokens");
 					return new SimpleEntry<>("id", pos);
 				}

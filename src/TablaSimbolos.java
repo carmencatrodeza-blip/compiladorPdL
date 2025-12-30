@@ -128,7 +128,7 @@ public class TablaSimbolos {
         if (s.getTipo() != null)
             sb.append("  + Tipo : '").append(s.getTipo()).append("'\n");
         if (s.getDesplazamiento() != null)
-            sb.append("  + Despl : ").append(Math.abs(s.getDesplazamiento()) - 1).append("\n");
+            sb.append("  + Despl : ").append(s.getDesplazamiento()).append("\n");
         if (s.getNumParams() != null) {
             sb.append("  + numParam : ").append(s.getNumParams()).append("\n");
             String[] tipos = s.getTiposParams().split(",");

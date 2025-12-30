@@ -295,7 +295,7 @@ public class AnalizadorSintactico {
 
         HashMap<String, String> reglasX = new HashMap<>();
         reglasX.put("(", "45.E {17} {1}");
-        reglasX.put(";", "46.{16}");
+        reglasX.put(";", "46.{10}");
         reglasX.put("id", "45.E {17} {1}");
         reglasX.put("entero", "45.E {17} {1}");
         reglasX.put("real", "45.E {17} {1}");

@@ -129,7 +129,6 @@ public class GestorErrores {
 			output += "El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.";
 		break;
 		case 314:
-			// TODO: Mejorar localización de la línea o borrar la línea para este mensaje.
 			output += "Sentencia 'return' fuera de estructura de función.";
 		break;
 		default:
