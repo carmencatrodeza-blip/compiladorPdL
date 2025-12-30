@@ -273,9 +273,8 @@ TRADUCCION A TERMINOS DE PILA
     }
 
 28. {AUX[tope-2].tipo :=
-        if (AUX[tope].tipo != funcion AND AUX[tope].tipo != buscarTipo(AUX[tope-1].pos)) then tipo_error
-        else if (buscarTipo(AUX[tope-1].pos) = funcion
-                AND buscarParametros(AUX[tope-1].pos) != AUX[tope].tipo) then tipo_error
+        if (buscarTipo(AUX[tope-1].pos) != funcion AND AUX[tope].tipo != buscarTipo(AUX[tope-1].pos)) then tipo_error
+        else if (buscarTipo(AUX[tope-1].pos) = funcion AND buscarParametros(AUX[tope-1].pos) != AUX[tope].tipo) then tipo_error
         else tipo_ok
     }
 
