@@ -3,6 +3,7 @@ import java.util.ArrayList;
 
 public class AnalizadorSemantico {
     private final Compilador compilador;
+    // Tanto la posicion de los ids como el tipo leído se guarda como String para poder usar una pila de parejas de Strings.
     ArrayList<SimpleEntry<String, String>> pilaAux;
     int desplazamientoLocal;
 
@@ -168,15 +169,14 @@ public class AnalizadorSemantico {
                 pilaAux.get(TOPE - 1).setValue("void");
                 return true;
             case 25:
-                // B -> while ( E ) { C
-                B = pilaAux.get(TOPE - 6);
-                E = pilaAux.get(TOPE - 3);
+                // B -> while ( E
+                B = pilaAux.get(TOPE - 3);
+                E = pilaAux.get(TOPE);
                 atrE = E.getValue();
-                C = pilaAux.get(TOPE);
-                atrC = C.getValue();
 
-                if ("logico".equals(atrE) && !"tipo_error".equals(atrC)) {
-                    B.setValue(atrC);
+                // En esta acción solo se verifica que el tipo de E sea lógico.
+                // Se asigna el tipo de B en la acción 46 una vez se ha comprobado el cuerpo del while.
+                if ("logico".equals(atrE)) {
                     return true;
                 } else {
                     B.setValue("tipo_error");
@@ -185,14 +185,12 @@ public class AnalizadorSemantico {
                     return false;
                 }
             case 26:
-                // B -> if ( E ) S
-                B = pilaAux.get(TOPE - 5);
-                E = pilaAux.get(TOPE - 2);
+                // B -> if ( E
+                B = pilaAux.get(TOPE - 3);
+                E = pilaAux.get(TOPE);
                 atrE = E.getValue();
-                S = pilaAux.get(TOPE);
-                atrS = S.getValue();
 
-                if ("logico".equals(atrE) && "tipo_ok".equals(atrS)) {
+                if ("logico".equals(atrE)) {
                     B.setValue("tipo_ok");
                     return true;
                 } else {
@@ -563,6 +561,22 @@ public class AnalizadorSemantico {
                 actualizarVariableTS(obtenerTablaActual(), atrId, atrT);
                 incrementarDesplazamiento(desplazamiento(atrT));
                 return true;
+            case 46:
+                // B -> while ( E ) { C
+                B = pilaAux.get(TOPE - 6);
+                C = pilaAux.get(TOPE);
+                atrC = C.getValue();
+
+                // Se asume que la condición ya ha sido verificada en la acción 25
+                if (!"tipo_error".equals(atrC)) {
+                    B.setValue(atrC);
+                    return true;
+                } else {
+                    B.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(300, compilador.getLinea(), null);
+                    return false;
+                }
             default:
                 return false;
         }

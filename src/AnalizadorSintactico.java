@@ -48,14 +48,15 @@ public class AnalizadorSintactico {
                 if (topePila.equals(tokenActual)) {
                     String simbolo = pila.pop();
                     // System.out.println("DEBUG: simbolo = " + simbolo + ", atributo = " + (atributoActual != null ? atributoActual.toString() : "null") + ", lexema = " + lexemaActual);
-                    if (!simbolo.equals("$"))
+                    if (!simbolo.equals("$")) {
                         semantico.pushToAux(simbolo, obtenerAtributoParaTerminal(simbolo));
-                    lexemaAnterior = lexemaActual;
-                    tokenActual = leerSiguienteToken();
+                        lexemaAnterior = lexemaActual;
+                        tokenActual = leerSiguienteToken();
+                    }
                 } else {
                     compilador.lanzarError();
                     gestorErrores.mostrarError(201,
-                        compilador.getLinea(), topePila, tokenActual, lexemaAnterior, null);
+                        compilador.getLinea(), topePila, lexemaActual, lexemaAnterior, null);
                     return "0";
                 }
             } else { // No terminal
@@ -78,17 +79,17 @@ public class AnalizadorSintactico {
                     esperados = esperados.substring(0, esperados.length()-2);
                     compilador.lanzarError();
                     gestorErrores.mostrarError(202,
-                        compilador.getLinea(), topePila, tokenActual, lexemaAnterior, esperados);
+                        compilador.getLinea(), topePila, lexemaActual, lexemaAnterior, esperados);
                     return "0";
                 }
             }
         }
 
         // Si se espera algo que no sea el EOF y no se ha detectado ningún error aún.
-        if (!tokenActual.equals("$") && !compilador.getErrorDetectado()) {
+        if (!compilador.getErrorDetectado() && !tokenActual.equals("$")) {
             compilador.lanzarError();
             gestorErrores.mostrarError(201,
-                compilador.getLinea(), "fin de fichero", tokenActual, lexemaAnterior, null);
+                compilador.getLinea(), "fin de fichero", lexemaActual, lexemaAnterior, null);
             return "0";
         }
         return parse.substring(0, parse.length()-1);
@@ -162,11 +163,11 @@ public class AnalizadorSintactico {
         tabla.put("P", reglasP);
 
         HashMap<String, String> reglasB = new HashMap<>();
-        reglasB.put("if", "7.if ( E ) S {26} {5}");
+        reglasB.put("if", "7.if ( E {26} ) S {5}");
         reglasB.put("let", "8.let {8} T id {6} {27} ; {4}");
         reglasB.put("read", "5.S {17} {1}");
         reglasB.put("return", "5.S {17} {1}");
-        reglasB.put("while", "6.while ( E ) { C {25} } {7}");
+        reglasB.put("while", "6.while ( E {25} ) { C {46} } {7}");
         reglasB.put("write", "5.S {17} {1}");
         reglasB.put("id", "5.S {17} {1}");
         tabla.put("B", reglasB);
@@ -319,12 +320,13 @@ public class AnalizadorSintactico {
 
     private String leerSiguienteToken() {
         Map.Entry<String,Object> t = lexico.sigToken();
-        simboloActual = t.getKey();
-        atributoActual = t.getValue();
-        String terminal = traducirTokenATerminal(simboloActual);
-        // Obtener el lexema literal
-        lexemaActual = obtenerLexemaLiteral(simboloActual, atributoActual);
-
+        String terminal = null;
+        if (!compilador.getErrorDetectado()){
+            simboloActual = t.getKey();
+            atributoActual = t.getValue();
+            terminal = traducirTokenATerminal(simboloActual);
+            lexemaActual = obtenerLexemaLiteral(simboloActual, atributoActual);
+        }
         return terminal;
     }
 

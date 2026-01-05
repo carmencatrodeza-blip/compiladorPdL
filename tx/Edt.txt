@@ -26,12 +26,12 @@ P -> lambda {P.tipo := vacio}
 
 B -> S {B.tipo := S.tipo}
 
-B -> while ( E ) { C {
-    B.tipo := if (E.tipo = logico AND C.tipo != tipo_error) then C.tipo else tipo_error
+B -> while ( E {if (E.tipo != logico) B.tipo = tipo_error} ) { C {
+    B.tipo := if (C.tipo != tipo_error) then C.tipo else tipo_error
 } }
 
-B -> if ( E ) S {
-    B.tipo := if (E.tipo = logico AND S.tipo = tipo_ok) then tipo_ok else tipo_error
+B -> if ( E {if (E.tipo != logico) B.tipo = tipo_error} ) S {
+    B.tipo := if (S.tipo = tipo_ok) then tipo_ok else tipo_error
 }
 
 B -> let T id {
@@ -255,15 +255,9 @@ TRADUCCION A TERMINOS DE PILA
 
 24. {AUX[tope-1].tipo := void}
 
-25. {AUX[tope-6].tipo :=
-        if (AUX[tope-3].tipo = logico AND AUX[tope].tipo != tipo_error)
-        then AUX[tope].tipo else tipo_error
-    }
+25. {AUX[tope-3].tipo := if (AUX[tope].tipo != logico) tipo_error}
 
-26. {AUX[tope-5].tipo :=
-        if (AUX[tope-2].tipo = logico AND AUX[tope].tipo = tipo_ok)
-        then tipo_ok else tipo_error
-    }
+26. {AUX[tope-3].tipo := if (AUX[tope].tipo = logico) then tipo_ok else tipo_error}
 
 27. {if(buscarTipo(AUX[tope].pos) ∉ {logico, entero, real, cadena, funcion}) then {
         actualizarVariableTS(obtenerTablaActual(), AUX[tope].pos, AUX[tope-1].tipo);
@@ -383,6 +377,11 @@ TRADUCCION A TERMINOS DE PILA
 
 45. {actualizarVariableTS(TSL, AUX[tope].pos, AUX[tope-1].tipo)}
 
+46. {AUX[tope-6].tipo :=
+        if (AUX[tope].tipo != tipo_error) then AUX[tope].tipo
+        else tipo_error
+    }
+
 EdT CON REGLAS TRADUCIDAS A PILA
 
 P1 -> P {13} {1}
@@ -390,8 +389,8 @@ P -> B P {14} {2}
 P -> F P {15} {2}
 P -> lambda {16}
 B -> S {17} {1}
-B -> while ( E ) { C {25} } {7}
-B -> if ( E ) S {26} {5}
+B -> while ( E {25} ) { C {46} } {7}
+B -> if ( E {26} ) S {5}
 B -> let {8} T id {6} {27} ; {4}
 S -> id S1 {28} {2}
 S -> write E {29} ; {3} 

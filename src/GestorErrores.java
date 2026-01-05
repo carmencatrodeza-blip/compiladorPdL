@@ -37,7 +37,7 @@ public class GestorErrores {
 
 	// Mensajes de error léxico
     public void mostrarError(int codigo, int linea, char caracter, String lexema) {
-		output += ROJO + "Error Léxico [Línea " + linea + "]: ";
+		output += ROJO + "Error Léxico " + codigo + " [Línea " + linea + "]: ";
 		switch (codigo) {
 		case 101:
 			output += "Caracter " + caracter + " no reconocido.";
@@ -71,14 +71,14 @@ public class GestorErrores {
 	}
 
 	// Mensajes de error sintáctico
-	public void mostrarError(int codigo, int linea, String topePila, String tokenActual, String ultimoLexema, String posibles) {
-		output += ROJO + "Error Sintáctico [Línea " + linea + "]: tras '" + ultimoLexema + "' ";
+	public void mostrarError(int codigo, int linea, String topePila, String lexemaActual, String ultimoLexema, String posibles) {
+		output += ROJO + "Error Sintáctico " + codigo + " [Línea " + linea + "]: tras '" + ultimoLexema + "' ";
 		switch(codigo){
 		case 201:
-			output += "se esperaba '" + topePila + "' pero se encontró '" + tokenActual + "'.";
+			output += "se esperaba '" + topePila + "' pero se encontró '" + lexemaActual + "'.";
 			break;
 		case 202:
-			output += "se esperaba uno de los siguientes: " + posibles + ", pero se encontró '" + tokenActual + "'.";
+			output += "se esperaba uno de los siguientes: " + posibles + ", pero se encontró '" + lexemaActual + "'.";
 			break;
 		default:
 			output += "Error desconocido.";
@@ -89,7 +89,7 @@ public class GestorErrores {
 
 	// Mensajes de error semántico
 	public void mostrarError(int codigo, int linea, String lexema) {
-		output += ROJO + "Error Semántico [Línea " + linea + "]: ";
+		output += ROJO + "Error Semántico " + codigo + " [Línea " + linea + "]: ";
 		switch (codigo) {
 		case 301:
 			output += "Los parámetros usados en la función '" + lexema + "' no coinciden con los de su declaración.";
@@ -110,10 +110,10 @@ public class GestorErrores {
 			output += "Asignación '/=' realizada con una variable de tipo distinto a entero o real.";
 		break;
 		case 307:
-			output += "La variable '" + lexema + "' debe ser de tipo entero, real o cadena para poder guardar un dato en ella.";
+			output += "Sentencia 'read' con variable de tipo distinto de entero, real o cadena.";
 		break;
 		case 308:
-			output += "Para escribir un dato por pantalla el dato debe ser de tipo entero, real o cadena.";
+			output += "Sentencia 'write' con variable de tipo distinto de entero, real o cadena.";
 		break;
 		case 309:
 			output += "El tipo de '" + lexema + "' no coincide con el de su valor asignado.";
