@@ -1,0 +1,127 @@
+let int x;
+let boolean b;
+
+function void imprimir(void) {
+    let string s;
+    write "Escribe lo que quieras imprimir";
+    read s;
+    write s;
+}
+
+x = 10;
+y = 5;
+b = x
+    / y
+    == 2
+    && y == 5;
+
+if (b)
+    imprimir();
+
+write x;
+write y;
+
+------------------------------------------------------------------------------------------------------------------------
+< let , >
+< int , >
+< id , 1 >
+< puntoComa , >
+< let , >
+< boolean , >
+< id , 2 >
+< puntoComa , >
+< function , >
+< void , >
+< id , 3 >
+< parIzq , >
+< void , >
+< parDer , >
+< llaveIzq , >
+< let , >
+< string , >
+< id , 1 >
+< puntoComa , >
+< write , >
+< cadena , "Escribe lo que quieras imprimir" >
+< puntoComa , >
+< read , >
+< id , 1 >
+< puntoComa , >
+< write , >
+< id , 1 >
+< puntoComa , >
+< llaveDer , >
+< id , 1 >
+< asig , >
+< entero , 10 >
+< puntoComa , >
+< id , 4 >
+< asig , >
+< entero , 5 >
+< puntoComa , >
+< id , 2 >
+< asig , >
+< id , 1 >
+< div , >
+< id , 4 >
+< igual , >
+< entero , 2 >
+< y , >
+< id , 4 >
+< igual , >
+< entero , 5 >
+< puntoComa , >
+< if , >
+< parIzq , >
+< id , 2 >
+< parDer , >
+< id , 3 >
+< parIzq , >
+< parDer , >
+< puntoComa , >
+< write , >
+< id , 1 >
+< puntoComa , >
+< write , >
+< id , 4 >
+< puntoComa , >
+< EOF , >
+------------------------------------------------------------------------------------------------------------------------
+descendente 1 2 8 22 2 8 19 3 16 18 24 27 8 21 27 5 10 29 32 35 42 37 34 31 27 5 11 27 5 10 29 32 35 38 44 37 34 31 28 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 38 44 36 38 44 37 33 35 40 37 34 30 32 35 38 44 37 33 35 40 37 34 31 2 7 29 32 35 38 44 37 34 31 9 15 48 2 5 10 29 32 35 38 44 37 34 31 2 5 10 29 32 35 38 44 37 34 31 4
+------------------------------------------------------------------------------------------------------------------------
+CONTENIDOS DE LA TABLA GLOBAL #1 : 
+* LEXEMA : 'x'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'b'
+  Atributos :
+  + Tipo : 'logico'
+  + Despl : 1
+--------- ---------
+* LEXEMA : 'imprimir'
+  Atributos :
+  + Tipo : 'funcion'
+  + numParam : 1
+    ---------
+    + TipoParam1 : 'void'
+    + ModoParam1: 'valor'
+    ---------
+  + TipoRetorno : 'void'
+  + EtiqFuncion : 'FUNCION-imprimir'
+--------- ---------
+* LEXEMA : 'y'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 2
+--------- ---------
+---------------------------------------------------
+CONTENIDOS DE LA TABLA FUNCION-imprimir #2 : 
+* LEXEMA : 's'
+  Atributos :
+  + Tipo : 'cadena'
+  + Despl : 0
+--------- ---------
+---------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------

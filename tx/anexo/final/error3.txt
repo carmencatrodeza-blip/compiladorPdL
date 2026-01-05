@@ -1,0 +1,23 @@
+let int x;
+
+return x; // 313
+
+function int f(int a) {
+    return "texto"; // 305
+}
+
+        //Declaracion implicita
+y = 3;
+
+x = f(y, 2) && x; // 301 ; 304
+
+write x;
+write y;
+write x / y;
+
+------------------------------------------------------------------------------------------------------------------------
+Error Semántico 313 [Línea 3]: Sentencia 'return' fuera de estructura de función.
+Error Semántico 305 [Línea 7]: El tipo de la sentencia 'return' de la función 'f' no coincide con el de su cabecera.
+Error Semántico 301 [Línea 12]: Los parámetros usados en la función 'f' no coinciden con los de su declaración.
+Error Semántico 304 [Línea 12]: Operación lógica '&&' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser lógicos.
+Error Semántico 309 [Línea 14]: El tipo de 'x' no coincide con el de su valor asignado.

@@ -4,7 +4,7 @@ public class GestorErrores {
 	private final String BLANCO = "\033[0m";
 	private String output = "";
 
-	// TODO: intentar mejorar el control de la linea (hay veces que se indica que el error está en la línea siguiente a dónde realmente está).
+	// TODO: intentar mejorar el control de la linea (hay veces que se indica que el error está en la línea siguiente a dónde realmente está)
 
 	// Mensajes de error genéricos
 	public void mostrarError(int codigo){

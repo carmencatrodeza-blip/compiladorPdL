@@ -1,0 +1,24 @@
+let  x; // 202
+let float y;
+
+function int operar(int n1, int n2){
+    write n1;
+    write n2;
+    return n1 / n2;
+}
+
+x = 10;
+y = .5; // 102
+
+if (x == 10 & y == 0.5) // 105
+    write operar(x, y) // 202 ; 301
+
+write x;
+write y;
+
+------------------------------------------------------------------------------------------------------------------------
+Error Sintáctico 202 [Línea 1]: tras 'let' se esperaba uno de los siguientes: 'boolean', 'string', 'float', 'int', pero se encontró 'x'.
+Error Léxico 102 [Línea 11]: Constante real sin parte entera.
+Error Léxico 105 [Línea 13]: Operador & no seguido de otro &.
+Error Semántico 301 [Línea 16]: Los parámetros usados en la función 'f' no coinciden con los de su declaración.
+Error Sintáctico 202 [Línea 16]: tras ')' se esperaba uno de los siguientes: '==', '&&', ')', ';', ',', '/', pero se encontró 'write'.

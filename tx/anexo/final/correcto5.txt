@@ -1,0 +1,123 @@
+let boolean b;
+let int x;
+
+function boolean eq(int a, int b) {
+    let boolean c;
+    c = a == b;
+    return c;
+}
+
+x = 5;
+b = eq(x, 5);
+
+if (b) 
+            // comentario correcto
+    write x;
+
+write x;
+
+------------------------------------------------------------------------------------------------------------------------
+< let , >
+< boolean , >
+< id , 1 >
+< puntoComa , >
+< let , >
+< int , >
+< id , 2 >
+< puntoComa , >
+< function , >
+< boolean , >
+< id , 3 >
+< parIzq , >
+< int , >
+< id , 1 >
+< coma , >
+< int , >
+< id , 2 >
+< parDer , >
+< llaveIzq , >
+< let , >
+< boolean , >
+< id , 3 >
+< puntoComa , >
+< id , 3 >
+< asig , >
+< id , 1 >
+< igual , >
+< id , 2 >
+< puntoComa , >
+< return , >
+< id , 3 >
+< puntoComa , >
+< llaveDer , >
+< id , 2 >
+< asig , >
+< entero , 5 >
+< puntoComa , >
+< id , 1 >
+< asig , >
+< id , 3 >
+< parIzq , >
+< id , 2 >
+< coma , >
+< entero , 5 >
+< parDer , >
+< puntoComa , >
+< if , >
+< parIzq , >
+< id , 1 >
+< parDer , >
+< write , >
+< id , 2 >
+< puntoComa , >
+< write , >
+< id , 2 >
+< puntoComa , >
+< EOF , >
+------------------------------------------------------------------------------------------------------------------------
+descendente 1 2 8 19 2 8 22 3 16 17 19 23 22 25 22 26 27 8 19 27 5 9 13 29 32 35 38 44 37 33 35 38 44 37 34 31 27 5 12 45 29 32 35 38 44 37 34 31 28 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 38 43 47 29 32 35 38 44 37 34 31 49 29 32 35 40 37 34 31 50 37 34 31 2 7 29 32 35 38 44 37 34 31 10 29 32 35 38 44 37 34 31 2 5 10 29 32 35 38 44 37 34 31 4
+------------------------------------------------------------------------------------------------------------------------
+CONTENIDOS DE LA TABLA GLOBAL #1 : 
+* LEXEMA : 'b'
+  Atributos :
+  + Tipo : 'logico'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'x'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 1
+--------- ---------
+* LEXEMA : 'eq'
+  Atributos :
+  + Tipo : 'funcion'
+  + numParam : 2
+    ---------
+    + TipoParam1 : 'entero'
+    + ModoParam1: 'valor'
+    ---------
+    + TipoParam2 : 'entero'
+    + ModoParam2: 'valor'
+    ---------
+  + TipoRetorno : 'logico'
+  + EtiqFuncion : 'FUNCION-eq'
+--------- ---------
+---------------------------------------------------
+CONTENIDOS DE LA TABLA FUNCION-eq #2 : 
+* LEXEMA : 'a'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'b'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : -1
+--------- ---------
+* LEXEMA : 'c'
+  Atributos :
+  + Tipo : 'logico'
+  + Despl : -2
+--------- ---------
+---------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------

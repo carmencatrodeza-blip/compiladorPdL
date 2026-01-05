@@ -1,0 +1,112 @@
+let string msg;
+let boolean ok;
+
+function string saludo(void) {
+    let string s;
+    s = "hola";
+    return s;
+}
+
+n = 3;
+msg = saludo();
+ok = n == 3;
+
+if (ok)
+    write msg;
+
+write n;
+
+------------------------------------------------------------------------------------------------------------------------
+< let , >
+< string , >
+< id , 1 >
+< puntoComa , >
+< let , >
+< boolean , >
+< id , 2 >
+< puntoComa , >
+< function , >
+< string , >
+< id , 3 >
+< parIzq , >
+< void , >
+< parDer , >
+< llaveIzq , >
+< let , >
+< string , >
+< id , 1 >
+< puntoComa , >
+< id , 1 >
+< asig , >
+< cadena , "hola" >
+< puntoComa , >
+< return , >
+< id , 1 >
+< puntoComa , >
+< llaveDer , >
+< id , 4 >
+< asig , >
+< entero , 3 >
+< puntoComa , >
+< id , 1 >
+< asig , >
+< id , 3 >
+< parIzq , >
+< parDer , >
+< puntoComa , >
+< id , 2 >
+< asig , >
+< id , 4 >
+< igual , >
+< entero , 3 >
+< puntoComa , >
+< if , >
+< parIzq , >
+< id , 2 >
+< parDer , >
+< write , >
+< id , 1 >
+< puntoComa , >
+< write , >
+< id , 4 >
+< puntoComa , >
+< EOF , >
+------------------------------------------------------------------------------------------------------------------------
+descendente 1 2 8 21 2 8 19 3 16 17 21 24 27 8 21 27 5 9 13 29 32 35 42 37 34 31 27 5 12 45 29 32 35 38 44 37 34 31 28 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 38 43 48 37 34 31 2 5 9 13 29 32 35 38 44 37 33 35 40 37 34 31 2 7 29 32 35 38 44 37 34 31 10 29 32 35 38 44 37 34 31 2 5 10 29 32 35 38 44 37 34 31 4
+------------------------------------------------------------------------------------------------------------------------
+CONTENIDOS DE LA TABLA GLOBAL #1 : 
+* LEXEMA : 'msg'
+  Atributos :
+  + Tipo : 'cadena'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'ok'
+  Atributos :
+  + Tipo : 'logico'
+  + Despl : 32
+--------- ---------
+* LEXEMA : 'saludo'
+  Atributos :
+  + Tipo : 'funcion'
+  + numParam : 1
+    ---------
+    + TipoParam1 : 'void'
+    + ModoParam1: 'valor'
+    ---------
+  + TipoRetorno : 'cadena'
+  + EtiqFuncion : 'FUNCION-saludo'
+--------- ---------
+* LEXEMA : 'n'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 33
+--------- ---------
+---------------------------------------------------
+CONTENIDOS DE LA TABLA FUNCION-saludo #2 : 
+* LEXEMA : 's'
+  Atributos :
+  + Tipo : 'cadena'
+  + Despl : 0
+--------- ---------
+---------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------

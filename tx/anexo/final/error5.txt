@@ -1,0 +1,27 @@
+let float x;
+let int x; // 310
+
+x = 6.; // 103
+
+let string s;
+s = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"; // 108
+
+if (x) // 311
+    write s;
+
+y = 10;
+
+x /= y; // 306
+
+x = 1175494360.33; // 107
+
+write x;
+write y;
+
+------------------------------------------------------------------------------------------------------------------------
+Error Semántico 310 [Línea 2]: La variable 'x' se ha declarado anteriormente.
+Error Léxico 103 [Línea 4]: Constante real sin parte decimal: "6.".
+Error Léxico 108 [Línea 7]: Constante cadena demasiado larga (>64 caracteres): "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".
+Error Semántico 311 [Línea 9]: El tipo de la expresión evaluada en la estructura 'if' debe ser lógico.
+Error Semántico 309 [Línea 16]: El tipo de 'x' no coincide con el de su valor asignado.
+Error Léxico 107 [Línea 16]: Constante real fuera de rango (>117549436.0): "1175494360.33".

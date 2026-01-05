@@ -1,0 +1,130 @@
+let int a;
+let int b;
+
+function int f(int x, int y) {
+    let int z;
+    z = x / y;
+    return z;
+}
+
+a = 100;
+b = 10;
+c = f(a, b);
+
+write a;
+write b;
+write c;
+
+------------------------------------------------------------------------------------------------------------------------
+< let , >
+< int , >
+< id , 1 >
+< puntoComa , >
+< let , >
+< int , >
+< id , 2 >
+< puntoComa , >
+< function , >
+< int , >
+< id , 3 >
+< parIzq , >
+< int , >
+< id , 1 >
+< coma , >
+< int , >
+< id , 2 >
+< parDer , >
+< llaveIzq , >
+< let , >
+< int , >
+< id , 3 >
+< puntoComa , >
+< id , 3 >
+< asig , >
+< id , 1 >
+< div , >
+< id , 2 >
+< puntoComa , >
+< return , >
+< id , 3 >
+< puntoComa , >
+< llaveDer , >
+< id , 1 >
+< asig , >
+< entero , 100 >
+< puntoComa , >
+< id , 2 >
+< asig , >
+< entero , 10 >
+< puntoComa , >
+< id , 4 >
+< asig , >
+< id , 3 >
+< parIzq , >
+< id , 1 >
+< coma , >
+< id , 2 >
+< parDer , >
+< puntoComa , >
+< write , >
+< id , 1 >
+< puntoComa , >
+< write , >
+< id , 2 >
+< puntoComa , >
+< write , >
+< id , 4 >
+< puntoComa , >
+< EOF , >
+------------------------------------------------------------------------------------------------------------------------
+descendente 1 2 8 22 2 8 22 3 16 17 22 23 22 25 22 26 27 8 22 27 5 9 13 29 32 35 38 44 36 38 44 37 34 31 27 5 12 45 29 32 35 38 44 37 34 31 28 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 40 37 34 31 2 5 9 13 29 32 35 38 43 47 29 32 35 38 44 37 34 31 49 29 32 35 38 44 37 34 31 50 37 34 31 2 5 10 29 32 35 38 44 37 34 31 2 5 10 29 32 35 38 44 37 34 31 2 5 10 29 32 35 38 44 37 34 31 4
+------------------------------------------------------------------------------------------------------------------------
+CONTENIDOS DE LA TABLA GLOBAL #1 : 
+* LEXEMA : 'a'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'b'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 1
+--------- ---------
+* LEXEMA : 'f'
+  Atributos :
+  + Tipo : 'funcion'
+  + numParam : 2
+    ---------
+    + TipoParam1 : 'entero'
+    + ModoParam1: 'valor'
+    ---------
+    + TipoParam2 : 'entero'
+    + ModoParam2: 'valor'
+    ---------
+  + TipoRetorno : 'entero'
+  + EtiqFuncion : 'FUNCION-f'
+--------- ---------
+* LEXEMA : 'c'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 2
+--------- ---------
+---------------------------------------------------
+CONTENIDOS DE LA TABLA FUNCION-f #2 : 
+* LEXEMA : 'x'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : 0
+--------- ---------
+* LEXEMA : 'y'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : -1
+--------- ---------
+* LEXEMA : 'z'
+  Atributos :
+  + Tipo : 'entero'
+  + Despl : -2
+--------- ---------
+---------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------

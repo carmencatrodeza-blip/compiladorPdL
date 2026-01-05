@@ -1,0 +1,27 @@
+let boolean b;
+let string s;
+let int x;
+
+b = 5; // 309
+s = "hola";
+x = s / 2; // 302
+
+write b; // 308
+write s;
+
+while (s) { // 312
+
+x = x 
+    / 3
+    / x
+    / 7
+    ;
+}
+
+write x;
+
+------------------------------------------------------------------------------------------------------------------------
+Error Semántico 309 [Línea 6]: El tipo de 'b' no coincide con el de su valor asignado.
+Error Semántico 302 [Línea 7]: Operación aritmética '/' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser enteros o reales.
+Error Semántico 308 [Línea 9]: Sentencia 'write' con variable de tipo distinto de entero, real o cadena.
+Error Semántico 312 [Línea 19]: El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.
