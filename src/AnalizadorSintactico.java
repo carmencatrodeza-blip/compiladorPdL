@@ -186,7 +186,7 @@ public class AnalizadorSintactico {
         tabla.put("S1", reglasS1);
 
         HashMap<String, String> reglasF = new HashMap<>();
-        reglasF.put("function", "16.function {8} H id {11} ( A {6} ) { C {32} {12} } {9}");
+        reglasF.put("function", "16.function {8} H id {11} ( A {32} {6} ) { C {12} } {9}");
         tabla.put("F", reglasF);
 
         HashMap<String, String> reglasH = new HashMap<>();

@@ -71,12 +71,14 @@ S1 -> /= E {
 
 S1 -> ( L {S1.tipo := L.tipo} ) ;
 
-F -> function {zona_declaracion:= true} H id {CrearTabla(id.pos)} ( A {zona_declaracion:= false} ) { C {
+F -> function {zona_declaracion:= true} H id {CrearTabla(id.pos)} ( A 
+    {actualizarFuncionTS(id.pos, A.tipo, H.tipo, etiq)}
+    {zona_declaracion:= false}
+    ) { C {
     F.tipo :=
         if (C.tipo = ret(H.tipo)) then tipo_ok
         else if (H.tipo = void AND C.tipo ∈ {vacio, tipo_ok}) then tipo_ok
         else tipo_error;
-    if (F.tipo = tipo_ok) actualizarFuncionTS(id.pos, A.tipo, H.tipo, etiq)
     } } {LiberarTabla(TSL)}
 
 H -> T {H.tipo := T.tipo}
@@ -217,7 +219,15 @@ TRADUCCION A TERMINOS DE PILA
 
 11. {CrearTabla(AUX[tope].pos)}
 
-12. {LiberarTabla(TSL)}
+12. {
+    AUX[tope-8].tipo :=
+        if (AUX[tope].tipo = ret_AUX[tope-6].tipo) then tipo_ok
+        else if (AUX[tope-6].tipo = void
+                 AND AUX[tope].tipo ∈ {vacio,tipo_ok})
+             then tipo_ok
+        else tipo_error;
+    LiberarTabla(TSL)
+    }
 
 13. {AUX[tope-1].tipo :=
         if (AUX[tope].tipo = tipo_ok) then tipo_ok else tipo_error;
@@ -284,15 +294,7 @@ TRADUCCION A TERMINOS DE PILA
         if (AUX[tope].tipo ∈ {entero,real}) then AUX[tope].tipo else tipo_error
     }
 
-32. {
-    AUX[tope-8].tipo :=
-        if (AUX[tope].tipo = ret_AUX[tope-6].tipo) then tipo_ok
-        else if (AUX[tope-6].tipo = void
-                 AND AUX[tope].tipo ∈ {vacio,tipo_ok})
-             then tipo_ok
-        else tipo_error;
-    if (AUX[tope-8].tipo = tipo_ok) actualizarFuncionTS(AUX[tope-5].pos, AUX[tope-3].tipo, AUX[tope-6].tipo, etiq)
-    }
+32. {actualizarFuncionTS(AUX[tope-2].pos, AUX[tope].tipo, AUX[tope-3].tipo, etiq)}
 
 33. {AUX[tope-3].tipo :=
         if (AUX[tope].tipo = vacio) then AUX[tope-2].tipo
@@ -399,7 +401,7 @@ S -> return X {19} ; {3}
 S1 -> = E {18} ; {3} 
 S1 -> /= E {31} ; {3} 
 S1 -> ( L {18} ) ; {4}
-F -> function {8} H id {11} ( A {6} ) { C {32} {12} } {9}
+F -> function {8} H id {11} ( A {32} {6} ) { C {12} } {9}
 H -> T {17} {1}
 H -> void {24} {1}
 T -> boolean {20} {1}

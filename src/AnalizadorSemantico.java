@@ -63,11 +63,34 @@ public class AnalizadorSemantico {
                 compilador.setDentroDeFuncion(true);
                 return true;
             case 12:
+                // Solo se verifica que el tipo de retorno sea correcto. Los datos de la función se guardan en la TS en la acción 32.
+                // F -> function H id ( A ) { C
+                F = pilaAux.get(TOPE - 8);
+                H = pilaAux.get(TOPE - 6);
+                atrH = H.getValue();
+                id = pilaAux.get(TOPE - 5);
+                atrId = id.getValue();
+                C = pilaAux.get(TOPE);
+                atrC = C.getValue();
+                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
+
                 compilador.getWriter().write(compilador.getTablaLocal().toString(), "tabla");
                 compilador.setTablaLocal(null);
                 compilador.setEtiquetaActual("GLOBAL");
                 compilador.setDentroDeFuncion(false);
-                return true;
+                if (atrC.equals("ret_" + atrH)) {
+                    F.setValue("tipo_ok");
+                    return true;
+                } else if ("void".equals(atrH) &&
+                            ("vacio".equals(atrC) || "tipo_ok".equals(atrC))) {
+                    F.setValue("tipo_ok");
+                    return true;
+                } else {
+                    F.setValue("tipo_error");
+                    compilador.lanzarError();
+                    compilador.getGestorErrores().mostrarError(305, compilador.getLinea(), lexemaId);
+                    return false;
+                }
             case 13:
                 // P1 -> P
                 P1 = pilaAux.get(TOPE - 1);
@@ -294,33 +317,16 @@ public class AnalizadorSemantico {
                     return false;
                 }
             case 32:
-                // F -> function H id ( A ) { C
-                F = pilaAux.get(TOPE - 8);
-                H = pilaAux.get(TOPE - 6);
+                // Se guardan los datos al acabar de leer la cabecera para poder llamar recursivamente.
+                // F -> function H id ( A 
+                H = pilaAux.get(TOPE - 3);
                 atrH = H.getValue();
-                id = pilaAux.get(TOPE - 5);
+                id = pilaAux.get(TOPE - 2);
                 atrId = id.getValue();
-                A = pilaAux.get(TOPE - 3);
+                A = pilaAux.get(TOPE);
                 atrA = A.getValue();
-                C = pilaAux.get(TOPE);
-                atrC = C.getValue();
-                lexemaId = compilador.getTablaGlobal().getId(Integer.parseInt(atrId));
-
-                if (atrC.equals("ret_" + atrH)) {
-                    F.setValue("tipo_ok");
-                    actualizarFuncionTS(atrId, atrA, atrH, compilador.getEtiquetaActual());
-                    return true;
-                } else if ("void".equals(atrH) &&
-                            ("vacio".equals(atrC) || "tipo_ok".equals(atrC))) {
-                    F.setValue("tipo_ok");
-                    actualizarFuncionTS(atrId, atrA, atrH, compilador.getEtiquetaActual());
-                    return true;
-                } else {
-                    F.setValue("tipo_error");
-                    compilador.lanzarError();
-                    compilador.getGestorErrores().mostrarError(305, compilador.getLinea(), lexemaId);
-                    return false;
-                }
+                actualizarFuncionTS(atrId, atrA, atrH, compilador.getEtiquetaActual());
+                return true;
             case 33:
                 // A -> T id K
                 A = pilaAux.get(TOPE - 3);
