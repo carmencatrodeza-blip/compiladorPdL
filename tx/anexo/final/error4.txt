@@ -19,7 +19,7 @@ write z;
 
 ------------------------------------------------------------------------------------------------------------------------
 Error Léxico 106 [Línea 2]: Constante entera fuera de rango (>32767): "327670".
-Error Sintáctico 202 [Línea 6]: tras '10' se esperaba uno de los siguientes: '==', '&&', ')', ';', ',', '/', pero se encontró 'write'.
+Error Sintáctico 202 [Línea 7]: tras '10' se esperaba uno de los siguientes: '==', '&&', ')', ';', ',', '/', pero se encontró 'write'.
 Error Sintáctico 201 [Línea 10]: tras 'while' se esperaba '(' pero se encontró 'x'.
 Error Semántico 303 [Línea 10]: Operación relacional '==' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser enteros, reales o lógicos.
 Error Léxico 101 [Línea 12]: Caracter + no reconocido.

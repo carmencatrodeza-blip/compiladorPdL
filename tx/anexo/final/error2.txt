@@ -21,7 +21,7 @@ x = x
 write x;
 
 ------------------------------------------------------------------------------------------------------------------------
-Error Semántico 309 [Línea 6]: El tipo de 'b' no coincide con el de su valor asignado.
+Error Semántico 309 [Línea 5]: El tipo de 'b' no coincide con el de su valor asignado.
 Error Semántico 302 [Línea 7]: Operación aritmética '/' realizada con tipos de datos diferentes. Ambos datos utilizados en la operación deben ser enteros o reales.
 Error Semántico 308 [Línea 9]: Sentencia 'write' con variable de tipo distinto de entero, real o cadena.
-Error Semántico 312 [Línea 19]: El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.
+Error Semántico 312 [Línea 12]: El tipo de la expresión evaluada en la estructura 'while' debe ser lógico.

@@ -63,13 +63,13 @@ S -> return X {
     else S.tipo := tipo_error
 } ;
 
-S1 -> = E {S1.tipo := E.tipo} ;
+S1 -> = E {S1.tipo := E.tipo}
 
 S1 -> /= E {
     S1.tipo := if (E.tipo ∈ {entero, real}) then E.tipo else tipo_error
-} ;
+}
 
-S1 -> ( L {S1.tipo := L.tipo} ) ;
+S1 -> ( L {S1.tipo := L.tipo} )
 
 F -> function {zona_declaracion:= true} H id {CrearTabla(id.pos)} ( A 
     {actualizarFuncionTS(id.pos, A.tipo, H.tipo, etiq)}
@@ -394,13 +394,13 @@ B -> S {17} {1}
 B -> while ( E {25} ) { C {46} } {7}
 B -> if ( E {26} ) S {5}
 B -> let {8} T id {6} {27} ; {4}
-S -> id S1 {28} {2}
+S -> id S1 {28} ; {3}
 S -> write E {29} ; {3} 
 S -> read id {30} ; {3} 
 S -> return X {19} ; {3} 
-S1 -> = E {18} ; {3} 
-S1 -> /= E {31} ; {3} 
-S1 -> ( L {18} ) ; {4}
+S1 -> = E {18} {2} 
+S1 -> /= E {31} {2} 
+S1 -> ( L {18} ) {3}
 F -> function {8} H id {11} ( A {32} {6} ) { C {12} } {9}
 H -> T {17} {1}
 H -> void {24} {1}

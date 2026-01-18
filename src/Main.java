@@ -4,7 +4,11 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        String ruta = "src\\PIdG33.txt";
+        if (args.length != 1) {
+            System.out.println("Lee README.txt para conocer los detalles de uso del procesador.");
+            return;
+        }
+        String ruta = args[0];
         Compilador compilador = new Compilador();
         // Limpiar archivos con resultados de otras ejecuciones.
         compilador.getWriter().write("", "tokens");

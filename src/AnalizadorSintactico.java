@@ -176,13 +176,13 @@ public class AnalizadorSintactico {
         reglasS.put("read", "11.read id {30} ; {3}");
         reglasS.put("return", "12.return X {19} ; {3}");
         reglasS.put("write", "10.write E {29} ; {3}");
-        reglasS.put("id","9.id S1 {28} {2}");
+        reglasS.put("id","9.id S1 {28} ; {3}");
         tabla.put("S", reglasS);
 
         HashMap<String, String> reglasS1 = new HashMap<>();
-        reglasS1.put("=", "13.= E {18} ; {3}");
-        reglasS1.put("/=", "14./= E {31} ; {3}");
-        reglasS1.put("(", "15.( L {18} ) ; {4}");
+        reglasS1.put("=", "13.= E {18} {2}");
+        reglasS1.put("/=", "14./= E {31} {2}");
+        reglasS1.put("(", "15.( L {18} ) {3}");
         tabla.put("S1", reglasS1);
 
         HashMap<String, String> reglasF = new HashMap<>();
